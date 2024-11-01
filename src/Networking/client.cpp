@@ -124,7 +124,7 @@ int Client::sendMsg(const char* data) {
                 send(datasock, buffer, FTP_BUFFER_SIZE, 0);
             }
             fclose(fp);
-            cout << "FTP: File upload done.\n";
+            cout << "FTP: File upload done" << endl;
         } else {
             send(CONN, "0", FTP_BUFFER_SIZE, 0);
         }
