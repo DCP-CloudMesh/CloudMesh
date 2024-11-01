@@ -13,12 +13,22 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <filesystem>
+#include <regex>
+
+namespace fs = std::filesystem;
 
 /*
  * Defines the universal buffer size used in FTP. Packets are transferred
  * blocks of bytes limited to the specified size.
  */
-#define FTP_BUFFER_SIZE 4096 //
+#define FTP_BUFFER_SIZE 4096
+
+/*
+ * Defines the data location of training files.
+ */
+const std::string DATA_DIR = "data";
+
 
 struct IpAddress {
     std::string host;
@@ -55,5 +65,17 @@ int FTP_create_socket_client(int port, const char* addr);
 int FTP_create_socket_server(int port);
 
 int FTP_accept_conn(int sock);
+
+/*
+ * Resolves the path of a file within the data directory. 
+ * Accepts a filename and returns a relative path.
+ */
+fs::path resolveDataFile(const std::string filename);
+
+/*
+ * Verifies if a file is present in the data directory. Accepts 
+ * a filename as input.
+ */
+bool isFileWithinDataDirectory(const std::string& filename);
 
 #endif // __UTILITY__
