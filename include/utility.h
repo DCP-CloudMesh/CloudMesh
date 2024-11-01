@@ -13,12 +13,21 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 /*
  * Defines the universal buffer size used in FTP. Packets are transferred
  * blocks of bytes limited to the specified size.
  */
-#define FTP_BUFFER_SIZE 4096 //
+#define FTP_BUFFER_SIZE 4096
+
+/*
+ * Defines the data location of training files.
+ */
+const std::string DATA_DIR = "data";
+
 
 struct IpAddress {
     std::string host;
