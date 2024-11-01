@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <filesystem>
+#include <regex>
 
 namespace fs = std::filesystem;
 
@@ -64,5 +65,17 @@ int FTP_create_socket_client(int port, const char* addr);
 int FTP_create_socket_server(int port);
 
 int FTP_accept_conn(int sock);
+
+/*
+ * Resolves the path of a file within the data directory. 
+ * Accepts a filename and returns a relative path.
+ */
+fs::path resolveDataFile(const std::string filename);
+
+/*
+ * Verifies if a file is present in the data directory. Accepts 
+ * a filename as input.
+ */
+bool isFileWithinDataDirectory(const std::string& filename);
 
 #endif // __UTILITY__
