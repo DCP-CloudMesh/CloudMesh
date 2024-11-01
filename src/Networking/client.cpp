@@ -76,31 +76,33 @@ int Client::sendMsg(const char* data) {
         close(CONN);
         return 1;
     }
-    cout << "Client Received: " << string(buffer, mLen) << endl;
+    buffer[mLen] = '\0';
+    cout << "FTP Server Received: " << string(buffer, mLen) << endl;
 
     /*
      * If the request received contains the keyword "get", which is used to
      * represent a file transfer request, the client will proceed to provide the
      * file.
      */
-    char *token, *dummy;
-    dummy = buffer;
-    token = strtok(dummy, " ");
+    // Using `std::istringstream` instead of strtok
+    std::istringstream iss(buffer);
+    std::string command, filename;
+    iss >> command >> filename; // Extract command and filename from message
+
     // process file descriptor
-    if (strcmp("get", token) == 0) {
-        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE],
-            char_num_blks[FTP_BUFFER_SIZE], char_num_last_blk[FTP_BUFFER_SIZE];
+    if (command == "get") {
+        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE], char_num_blks[FTP_BUFFER_SIZE],
+            char_num_last_blk[FTP_BUFFER_SIZE];
         int datasock, lSize, num_blks, num_last_blk, i;
         FILE* fp;
-        token = strtok(NULL, " \n");
-        cout << "FTP: Filename given is: " << token << endl;
+        cout << "FTP: Filename given is: " << filename << endl;
         int data_port = 1024;
         sprintf(port, "%d", data_port);
         datasock = FTP_create_socket_server(
             data_port); // creating socket for data connection
         send(CONN, port, FTP_BUFFER_SIZE, 0); // sending port no. to client
         datasock = FTP_accept_conn(datasock); // accepting connnection by client
-        if ((fp = fopen(token, "r")) != NULL) {
+        if ((fp = fopen(filename.c_str(), "r")) != NULL) {
             // size of file
             send(CONN, "nxt", FTP_BUFFER_SIZE, 0);
             fseek(fp, 0, SEEK_END);
@@ -110,7 +112,6 @@ int Client::sendMsg(const char* data) {
             num_last_blk = lSize % FTP_BUFFER_SIZE;
             sprintf(char_num_blks, "%d", num_blks);
             send(CONN, char_num_blks, FTP_BUFFER_SIZE, 0);
-            // cout<<num_blks<<"	"<<num_last_blk<<endl;
 
             for (i = 0; i < num_blks; i++) {
                 fread(buffer, sizeof(char), FTP_BUFFER_SIZE, fp);
