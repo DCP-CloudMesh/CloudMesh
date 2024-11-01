@@ -12,9 +12,9 @@ TaskRequest::TaskRequest(const unsigned int numWorkers,
 
 TaskRequest::TaskRequest(const unsigned int numWorkers,
                          const std::vector<int>& trainingData,
-                         const std::string& trainingFile)
+                         const std::string& trainingFileName)
     : Payload(Type::TASK_REQUEST), numWorkers{numWorkers},
-      trainingData{trainingData}, trainingFile{trainingFile} {
+      trainingData{trainingData}, trainingFile{trainingFileName} {
 
     createTrainingFile();
 }
