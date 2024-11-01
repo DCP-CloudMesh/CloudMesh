@@ -2,6 +2,7 @@
 #define __UTILITY__
 
 #include <arpa/inet.h>
+#include <filesystem>
 #include <iostream>
 #include <netinet/in.h>
 #include <random>
@@ -13,7 +14,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -27,7 +27,6 @@ namespace fs = std::filesystem;
  * Defines the data location of training files.
  */
 const std::string DATA_DIR = "data";
-
 
 struct IpAddress {
     std::string host;

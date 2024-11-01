@@ -91,8 +91,8 @@ int Client::sendMsg(const char* data) {
 
     // process file descriptor
     if (command == "get") {
-        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE], char_num_blks[FTP_BUFFER_SIZE],
-            char_num_last_blk[FTP_BUFFER_SIZE];
+        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE],
+            char_num_blks[FTP_BUFFER_SIZE], char_num_last_blk[FTP_BUFFER_SIZE];
         int datasock, lSize, num_blks, num_last_blk, i;
         FILE* fp;
         cout << "FTP: Filename given is: " << filename << endl;
@@ -124,7 +124,7 @@ int Client::sendMsg(const char* data) {
                 send(datasock, buffer, FTP_BUFFER_SIZE, 0);
             }
             fclose(fp);
-            cout << "FTP: File upload done.\n";
+            cout << "FTP: File upload done" << endl;
         } else {
             send(CONN, "0", FTP_BUFFER_SIZE, 0);
         }

@@ -17,8 +17,9 @@ class TaskRequest : public Payload {
     // A task request can have a string that specifies the
     // name of the training file on the local filesystem
     std::string trainingFile;
-    // Creates a file containing the trainingData as trainingFile. Only for 
-    // testing purposes. In a real-world scenario, the training data
+    // Creates a file containing the trainingData as trainingFile, in the
+    // DATA_DIR directory. Only for demo purposes.
+    // In a real-world scenario, the training data
     // should be provided and this function will be obsolete.
     void createTrainingFile();
 
