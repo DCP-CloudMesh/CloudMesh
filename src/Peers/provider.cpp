@@ -14,7 +14,7 @@
 
 using namespace std;
 
-Provider::Provider(const char* port, string uuid) : Peer(uuid) {
+Provider::Provider(const char* port, string uuid) : Peer(uuid), zmq_sender(5555) {
     isBusy = false;
     isLocalBootstrap = false;
 
@@ -51,6 +51,8 @@ void Provider::listen() {
         if (requesterPayload->getType() != Payload::Type::TASK_REQUEST) {
             continue;
         }
+
+        zmq_sender.send("P2P: task request received!");
 
         // FTP
         shared_ptr<TaskRequest> taskReq =

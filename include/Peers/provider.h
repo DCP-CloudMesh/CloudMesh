@@ -1,6 +1,7 @@
 #ifndef _PROVIDER_H_
 #define _PROVIDER_H_
 
+#include "../IPC/zmq_sender.h"
 #include "../Networking/client.h"
 #include "../Networking/server.h"
 #include "../RequestResponse/task_request.h"
@@ -16,6 +17,7 @@ class Provider : public Peer {
     bool isLocalBootstrap;
     bool isLeader;
     std::unique_ptr<TaskRequest> task;
+    ZMQSender zmq_sender;
 
   public:
     Provider(const char* port, std::string uuid);
