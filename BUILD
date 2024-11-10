@@ -40,7 +40,11 @@ cc_binary(
     name = "provider",
     srcs = ["main.cpp"],
     defines = ["PROVIDER=1"] + local_defines,                    
-    deps = [":src_files"],
+    deps = [
+        ":src_files",
+        "@libzmq//:libzmq",
+        "@cppzmq//:cppzmq",
+    ],
 )
 
 cc_binary(
