@@ -17,7 +17,7 @@ Makefile
 _deps
 bazel-bin
 bazel-out
-bazel-PeerToPeer
+bazel-CloudMesh
 bazel-testlogs
 MODULE.bazel.lock
 .DS_Store
