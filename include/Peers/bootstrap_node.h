@@ -1,8 +1,8 @@
 #ifndef _BOOTSTRAP_NODE_H
 #define _BOOTSTRAP_NODE_H
 
-#include <string>
 #include "../utility.h"
+#include <string>
 
 #include "peer.h"
 

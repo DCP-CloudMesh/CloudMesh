@@ -47,8 +47,8 @@ int Client::setupConn(const char* HOST, const char* PORT,
 }
 
 int Client::setupConn(const IpAddress& ipAddress, const char* CONNTYPE) {
-    return setupConn(ipAddress.host.c_str(),
-                     to_string(ipAddress.port).c_str(), CONNTYPE);
+    return setupConn(ipAddress.host.c_str(), to_string(ipAddress.port).c_str(),
+                     CONNTYPE);
 }
 
 int Client::sendMsg(const char* data) {
@@ -88,8 +88,8 @@ int Client::sendMsg(const char* data) {
     token = strtok(dummy, " ");
     // process file descriptor
     if (strcmp("get", token) == 0) {
-        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE], char_num_blks[FTP_BUFFER_SIZE],
-            char_num_last_blk[FTP_BUFFER_SIZE];
+        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE],
+            char_num_blks[FTP_BUFFER_SIZE], char_num_last_blk[FTP_BUFFER_SIZE];
         int datasock, lSize, num_blks, num_last_blk, i;
         FILE* fp;
         token = strtok(NULL, " \n");
@@ -97,7 +97,7 @@ int Client::sendMsg(const char* data) {
         int data_port = 1024;
         sprintf(port, "%d", data_port);
         datasock = FTP_create_socket_server(
-            data_port);               // creating socket for data connection
+            data_port); // creating socket for data connection
         send(CONN, port, FTP_BUFFER_SIZE, 0); // sending port no. to client
         datasock = FTP_accept_conn(datasock); // accepting connnection by client
         if ((fp = fopen(token, "r")) != NULL) {

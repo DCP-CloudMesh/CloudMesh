@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
     }
 
 #else
-    cout << "Please specify either --provider or --requester flag."
-         << endl;
+    cout << "Please specify either --provider or --requester flag." << endl;
 #endif
 }

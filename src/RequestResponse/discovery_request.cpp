@@ -7,7 +7,6 @@ DiscoveryRequest::DiscoveryRequest() : Payload(Type::DISCOVERY_REQUEST) {}
 DiscoveryRequest::DiscoveryRequest(const unsigned int peersRequested)
     : Payload(Type::DISCOVERY_REQUEST), peersRequested{peersRequested} {}
 
-
 unsigned int DiscoveryRequest::getPeersRequested() const {
     return peersRequested;
 }

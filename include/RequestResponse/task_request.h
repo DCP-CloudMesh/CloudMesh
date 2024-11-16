@@ -1,12 +1,12 @@
 #ifndef _TASK_REQUEST_H
 #define _TASK_REQUEST_H
 
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
 
-#include "payload.h"
 #include "../utility.h"
+#include "payload.h"
 
 class TaskRequest : public Payload {
     unsigned int numWorkers;

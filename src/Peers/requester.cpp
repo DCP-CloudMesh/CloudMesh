@@ -1,9 +1,9 @@
 #include "../../include/Peers/requester.h"
 #include "../../include/Peers/bootstrap_node.h"
-#include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/acknowledgement.h"
 #include "../../include/RequestResponse/discovery_request.h"
 #include "../../include/RequestResponse/discovery_response.h"
+#include "../../include/RequestResponse/message.h"
 #include "../../include/utility.h"
 
 using namespace std;
@@ -17,8 +17,8 @@ Requester::~Requester() noexcept {}
 void Requester::sendDiscoveryRequest(unsigned int numProviders) {
     const char* bootstrapHost = BootstrapNode::getServerIpAddress();
     const char* bootstrapPort = BootstrapNode::getServerPort();
-    cout << "Connecting to bootstrap node at "
-         << bootstrapHost << ":" << bootstrapPort << endl;
+    cout << "Connecting to bootstrap node at " << bootstrapHost << ":"
+         << bootstrapPort << endl;
     client->setupConn(bootstrapHost, bootstrapPort, "tcp");
 
     shared_ptr<Payload> payload = make_shared<DiscoveryRequest>(numProviders);
@@ -29,7 +29,8 @@ void Requester::sendDiscoveryRequest(unsigned int numProviders) {
 
 void Requester::waitForDiscoveryResponse() {
     cout << "Waiting for discovery response..." << endl;
-    while (!server->acceptConn());
+    while (!server->acceptConn())
+        ;
 
     // receive response from bootstrap (or possibly another peer)
     string serializedData = server->receiveFromConn();
@@ -43,7 +44,7 @@ void Requester::waitForDiscoveryResponse() {
         shared_ptr<DiscoveryResponse> dr =
             static_pointer_cast<DiscoveryResponse>(payload);
         AddressTable availablePeers = dr->getAvailablePeers();
-        for (auto & it : availablePeers) {
+        for (auto& it : availablePeers) {
             providerPeers[it.first] = it.second;
         }
         string logMsg = "Received " + to_string(availablePeers.size()) +
@@ -86,30 +87,37 @@ void Requester::divideTask() {
             subtaskData.push_back(trainingData[i * subtaskSize + j]);
         }
 
-        TaskRequest subtaskRequest = TaskRequest(1, subtaskData, "subtaskData_" + std::to_string(i) + ".txt");
-        /* 
-        * We use FTP to send the training data. This is necessary if the training data is large or cannot be 
-        * easily serialized into an in memory object (i.e. vector). 
-        * 
-        * In this simple case, we create a temporary file to hold the training data and demonstrate
-        * using FTP.
-        */
-        cout << "FTP: Created file " << subtaskRequest.getTrainingFile() << endl;
+        TaskRequest subtaskRequest = TaskRequest(
+            1, subtaskData, "subtaskData_" + std::to_string(i) + ".txt");
+        /*
+         * We use FTP to send the training data. This is necessary if the
+         * training data is large or cannot be easily serialized into an in
+         * memory object (i.e. vector).
+         *
+         * In this simple case, we create a temporary file to hold the training
+         * data and demonstrate using FTP.
+         */
+        cout << "FTP: Created file " << subtaskRequest.getTrainingFile()
+             << endl;
         subtaskRequest.setLeaderUuid(leaderUuid);
         subtaskRequest.setAssignedWorkers(assignedWorkers);
         taskRequests.push_back(subtaskRequest);
     }
 
     // add the remainder to the last subtask
-    // TODO: this implementation looks wrong. Should add to last subtask instead of creating a new one.
+    // TODO: this implementation looks wrong. Should add to last subtask instead
+    // of creating a new one.
     if (remainder != 0) {
         vector<int> subtaskData;
         for (int i = 0; i < remainder; i++) {
             subtaskData.push_back(trainingData[numSubtasks * subtaskSize + i]);
         }
 
-        TaskRequest subtaskRequest = TaskRequest(1, subtaskData, "subtaskData_" + std::to_string(numSubtasks) + ".txt");
-        cout << "FTP: Created file " << subtaskRequest.getTrainingFile() << endl;
+        TaskRequest subtaskRequest =
+            TaskRequest(1, subtaskData,
+                        "subtaskData_" + std::to_string(numSubtasks) + ".txt");
+        cout << "FTP: Created file " << subtaskRequest.getTrainingFile()
+             << endl;
         subtaskRequest.setLeaderUuid(queuedTask.getLeaderUuid());
         subtaskRequest.setAssignedWorkers(queuedTask.getAssignedWorkers());
         taskRequests.push_back(subtaskRequest);
@@ -131,7 +139,7 @@ void Requester::sendTaskRequest() {
 
     // Set task leader and followers
     AddressTable workers{};
-    for (auto & provider : providerPeers) {
+    for (auto& provider : providerPeers) {
         if (workers.size() == numRequestedWorkers) {
             break;
         }
@@ -145,7 +153,7 @@ void Requester::sendTaskRequest() {
 
     // send the task request to the workers
     int ctr = 0;
-    for (auto & worker : workers) {
+    for (auto& worker : workers) {
         // package and serialize the requests
         shared_ptr<TaskRequest> payload =
             make_shared<TaskRequest>(taskRequests[ctr]);
@@ -167,7 +175,8 @@ void Requester::checkStatus() {}
 TaskResponse Requester::getResults() {
     TaskResponse taskResult;
     // busy wait until connection is established
-    while (!server->acceptConn());
+    while (!server->acceptConn())
+        ;
 
     // get data from workers and aggregate
     string serializedData = server->receiveFromConn();

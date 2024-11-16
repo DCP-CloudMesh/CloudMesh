@@ -1,12 +1,13 @@
 #ifndef _DISCOVERY_RESPONSE_
 #define _DISCOVERY_RESPONSE_
 
-#include <string>
-#include "payload.h"
 #include "../utility.h"
+#include "payload.h"
+#include <string>
 
 class DiscoveryResponse : public Payload {
-    AddressTable availablePeers; 
+    AddressTable availablePeers;
+
   public:
     DiscoveryResponse();
     DiscoveryResponse(const AddressTable& availablePeers);

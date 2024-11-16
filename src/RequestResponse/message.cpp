@@ -1,21 +1,19 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-#include "../../include/utility.h"
-#include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/acknowledgement.h"
-#include "../../include/RequestResponse/registration.h"
 #include "../../include/RequestResponse/discovery_request.h"
 #include "../../include/RequestResponse/discovery_response.h"
+#include "../../include/RequestResponse/message.h"
+#include "../../include/RequestResponse/registration.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/RequestResponse/task_response.h"
+#include "../../include/utility.h"
 
 using namespace std;
 using namespace nlohmann;
 
-Message::Message() : payload{nullptr} {
-    uuid = uuid::generate_uuid_v4();
-}
+Message::Message() : payload{nullptr} { uuid = uuid::generate_uuid_v4(); }
 
 Message::Message(const string& senderUuid, const IpAddress& senderIpAddr,
                  shared_ptr<Payload> payload)
@@ -29,7 +27,7 @@ string Message::getUuid() const { return uuid; }
 
 string Message::getSenderUuid() const { return senderUuid; }
 
-IpAddress Message::getSenderIpAddr() const { return senderIpAddr; } 
+IpAddress Message::getSenderIpAddr() const { return senderIpAddr; }
 
 shared_ptr<Payload> Message::getPayload() const { return payload; }
 
@@ -60,26 +58,26 @@ string Message::serialize() const {
     j["id"] = uuid;
     j["senderId"] = senderUuid;
     j["senderIpAddress"] = serializeIpAddress(senderIpAddr);
-    switch(payload->getType()) {
-      case Payload::Type::ACKNOWLEDGEMENT:
+    switch (payload->getType()) {
+    case Payload::Type::ACKNOWLEDGEMENT:
         j["payloadType"] = "ACKNOWLEDGEMENT";
         break;
-      case Payload::Type::REGISTRATION:
+    case Payload::Type::REGISTRATION:
         j["payloadType"] = "REGISTRATION";
         break;
-      case Payload::Type::DISCOVERY_REQUEST:
+    case Payload::Type::DISCOVERY_REQUEST:
         j["payloadType"] = "DISCOVERY_REQUEST";
         break;
-      case Payload::Type::DISCOVERY_RESPONSE:
+    case Payload::Type::DISCOVERY_RESPONSE:
         j["payloadType"] = "DISCOVERY_RESPONSE";
         break;
-      case Payload::Type::TASK_REQUEST:
+    case Payload::Type::TASK_REQUEST:
         j["payloadType"] = "TASK_REQUEST";
         break;
-      case Payload::Type::TASK_RESPONSE:
+    case Payload::Type::TASK_RESPONSE:
         j["payloadType"] = "TASK_RESPONSE";
         break;
-      default:
+    default:
         j["payloadType"] = "";
     }
     j["payload"] = payload->serialize();

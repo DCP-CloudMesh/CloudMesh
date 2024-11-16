@@ -55,7 +55,7 @@ void TaskRequest::createTrainingFile() {
     if (!file.is_open()) {
         cerr << "Error opening file: " << trainingFile << endl;
         return;
-}
+    }
 
     for (int i = 0; i < trainingData.size(); i++) {
         file << trainingData[i] << "\n";

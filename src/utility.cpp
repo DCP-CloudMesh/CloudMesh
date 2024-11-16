@@ -34,7 +34,7 @@ IpAddress deserializeIpAddress(const string& jsonString) {
 
 string serializeAddressTable(const AddressTable& addressTable) {
     json j;
-    for (auto & it : addressTable) {
+    for (auto& it : addressTable) {
         j[it.first] = serializeIpAddress(it.second);
     }
     return j.dump();
@@ -130,83 +130,78 @@ string vectorToString(vector<int> vec) {
     return ss.str();
 }
 
-int FTP_create_socket_client(int port, const char *addr)
-{   
-    cout << "FTP: Creating FTP client socket " << port << " on " << addr << endl;
+int FTP_create_socket_client(int port, const char* addr) {
+    cout << "FTP: Creating FTP client socket " << port << " on " << addr
+         << endl;
 
-    const char *localhost = "127.0.0.1";
-	int sockfd;
-	struct sockaddr_in servaddr;
+    const char* localhost = "127.0.0.1";
+    int sockfd;
+    struct sockaddr_in servaddr;
 
-	// Create a socket for the client
-	// If sockfd<0 there was an error in the creation of the socket
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-	{
-		cerr << "FTP: Problem in creating the socket" << endl;
-		exit(2);
-	}
+    // Create a socket for the client
+    // If sockfd<0 there was an error in the creation of the socket
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        cerr << "FTP: Problem in creating the socket" << endl;
+        exit(2);
+    }
 
-	// Creation of the socket
-	memset(&servaddr, 0, sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr(localhost);
-	servaddr.sin_port = htons(port); // convert to big-endian order
+    // Creation of the socket
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr(localhost);
+    servaddr.sin_port = htons(port); // convert to big-endian order
 
-	// Connection of the client to the socket
-	if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-	{
-		cerr << "FTP: Problem in creating data channel" << endl;
-		exit(3);
-	}
+    // Connection of the client to the socket
+    if (connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
+        cerr << "FTP: Problem in creating data channel" << endl;
+        exit(3);
+    }
 
-	return (sockfd);
+    return (sockfd);
 }
 
+int FTP_create_socket_server(int port) {
+    cout << "FTP: Creating FTP server socket " << port << endl;
+    int listenfd;
+    struct sockaddr_in dataservaddr;
 
-int FTP_create_socket_server(int port)
-{
-     cout << "FTP: Creating FTP server socket " << port << endl;
-	int listenfd;
-	struct sockaddr_in dataservaddr;
+    // Create a socket for the soclet
+    // If sockfd<0 there was an error in the creation of the socket
+    if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        cerr << "FTP: Problem in creating the data socket" << endl;
+        exit(2);
+    }
 
-	// Create a socket for the soclet
-	// If sockfd<0 there was an error in the creation of the socket
-	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-	{
-		cerr << "FTP: Problem in creating the data socket" << endl;
-		exit(2);
-	}
+    // preparation of the socket address
+    dataservaddr.sin_family = AF_INET;
+    dataservaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    dataservaddr.sin_port = htons(port);
 
-	// preparation of the socket address
-	dataservaddr.sin_family = AF_INET;
-	dataservaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	dataservaddr.sin_port = htons(port);
+    if ((::bind(listenfd, (struct sockaddr*)&dataservaddr,
+                sizeof(dataservaddr))) < 0) {
+        cerr << "FTP: Problem in binding the data socket" << endl;
+        exit(2);
+    }
 
-	if ((::bind(listenfd, (struct sockaddr *)&dataservaddr, sizeof(dataservaddr))) < 0)
-	{
-		cerr << "FTP: Problem in binding the data socket" << endl;
-		exit(2);
-	}
+    // listen to the socket by creating a connection queue, then wait for
+    // clients
+    listen(listenfd, 1);
 
-	// listen to the socket by creating a connection queue, then wait for clients
-	listen(listenfd, 1);
-
-	return (listenfd);
+    return (listenfd);
 }
 
-int FTP_accept_conn(int sock)
-{
-	int dataconnfd;
-	socklen_t dataclilen;
-	struct sockaddr_in datacliaddr;
+int FTP_accept_conn(int sock) {
+    int dataconnfd;
+    socklen_t dataclilen;
+    struct sockaddr_in datacliaddr;
 
-	dataclilen = sizeof(datacliaddr);
-	// accept a connection
-	if ((dataconnfd = accept(sock, (struct sockaddr *)&datacliaddr, &dataclilen)) < 0)
-	{
-		cerr << "FTP: Problem in accepting the data socket" << endl;
-		exit(2);
-	}
+    dataclilen = sizeof(datacliaddr);
+    // accept a connection
+    if ((dataconnfd =
+             accept(sock, (struct sockaddr*)&datacliaddr, &dataclilen)) < 0) {
+        cerr << "FTP: Problem in accepting the data socket" << endl;
+        exit(2);
+    }
 
-	return (dataconnfd);
+    return (dataconnfd);
 }

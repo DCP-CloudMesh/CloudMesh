@@ -6,6 +6,4 @@ Payload::Payload(Payload::Type type) : type{type} {}
 
 Payload::~Payload() {}
 
-Payload::Type Payload::getType() const {
-    return type;
-}
+Payload::Type Payload::getType() const { return type; }

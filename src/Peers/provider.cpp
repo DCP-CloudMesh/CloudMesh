@@ -1,16 +1,16 @@
 #include "../../include/Peers/provider.h"
 #include "../../include/Peers/bootstrap_node.h"
-#include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/acknowledgement.h"
+#include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/registration.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/utility.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-#include <algorithm>
 
 using namespace std;
 
@@ -25,8 +25,8 @@ Provider::~Provider() noexcept {}
 void Provider::registerWithBootstrap() {
     const char* bootstrapHost = BootstrapNode::getServerIpAddress();
     const char* bootstrapPort = BootstrapNode::getServerPort();
-    cout << "Connecting to bootstrap node at "
-         << bootstrapHost << ":" << bootstrapPort << endl;
+    cout << "Connecting to bootstrap node at " << bootstrapHost << ":"
+         << bootstrapPort << endl;
     client->setupConn(bootstrapHost, bootstrapPort, "tcp");
 
     shared_ptr<Registration> payload = make_shared<Registration>();
@@ -38,7 +38,8 @@ void Provider::registerWithBootstrap() {
 void Provider::listen() {
     while (true) {
         cout << "Waiting for requester to connect..." << endl;
-        if (!server->acceptConn()) continue;
+        if (!server->acceptConn())
+            continue;
 
         // receive task request object from client
         string requesterData = server->receiveFromConn();
@@ -58,7 +59,8 @@ void Provider::listen() {
         task = make_unique<TaskRequest>(std::move(*taskReq));
 
         if (task->getTrainingFile().empty()) {
-            // if training file is not set, then we continue assuming the trainingData field has been set
+            // if training file is not set, then we continue assuming the
+            // trainingData field has been set
             server->replyToConn("Provider ID: " + uuid +
                                 " : Deserialized "
                                 "task request. Now processing workload.\n");
@@ -90,7 +92,8 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     vector<vector<int>> followerData{};
     while (followerData.size() < task->getAssignedWorkers().size() - 1) {
         cout << "\nWaiting for follower peer to connect..." << endl;
-        while (!server->acceptConn());
+        while (!server->acceptConn())
+            ;
 
         // get data from followers and aggregate
         string followerMsgStr = server->receiveFromConn();
@@ -119,11 +122,10 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     // TODO: requester IP address could change
     shared_ptr<TaskResponse> aggregatePayload =
         make_shared<TaskResponse>(aggregatedResults);
-    Message aggregateResultMsg(uuid, IpAddress(host, port),
-                                aggregatePayload);
+    Message aggregateResultMsg(uuid, IpAddress(host, port), aggregatePayload);
 
     cout << "Waiting for connection back to requester" << endl;
-    // Keep trying to send results back to requester 
+    // Keep trying to send results back to requester
     while (true) {
         // busy wait until connection is established
         while (client->setupConn(requesterIpAddr, "tcp") != 0) {
@@ -133,7 +135,8 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
             continue;
         }
 
-        if (!server->acceptConn()) continue;
+        if (!server->acceptConn())
+            continue;
 
         // receive response from requester
         string serializedData = server->receiveFromConn();
@@ -152,8 +155,7 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 void Provider::followerHandleTaskRequest() {
     processWorkload();
     cout << "Waiting for connection back to leader" << endl;
-    IpAddress leaderIp =
-        task->getAssignedWorkers()[task->getLeaderUuid()];
+    IpAddress leaderIp = task->getAssignedWorkers()[task->getLeaderUuid()];
     // busy wait until connection is established with the leader
     while (client->setupConn(leaderIp, "tcp") == -1) {
         sleep(5);

@@ -1,8 +1,8 @@
 #ifndef _REGISTRATION_
 #define _REGISTRATION_
 
-#include <string>
 #include "payload.h"
+#include <string>
 
 class Registration : public Payload {
   public:
