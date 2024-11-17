@@ -160,7 +160,10 @@ void Provider::followerHandleTaskRequest() {
     while (client->setupConn(leaderIp, "tcp") == -1) {
         sleep(5);
     }
-    client->sendMsg(task->serialize().c_str());
+    auto proto = task->serializeToProto();
+    string serialized;
+    proto->SerializeToString(&serialized);
+    client->sendMsg(serialized.c_str());
 }
 
 void Provider::processWorkload() {
