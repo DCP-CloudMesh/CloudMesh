@@ -87,8 +87,11 @@ void Requester::divideTask() {
             subtaskData.push_back(trainingData[i * subtaskSize + j]);
         }
 
-        TaskRequest subtaskRequest = TaskRequest(
-            1, subtaskData, "subtaskData_" + std::to_string(i) + ".txt");
+        // Build a path by combining the filename and DATA_DIR using path joins
+        string filename = "subtaskData_" + std::to_string(i) + ".txt";
+        fs::path path = fs::path(DATA_DIR) / filename;
+
+        TaskRequest subtaskRequest = TaskRequest(1, subtaskData, path.string());
         /*
          * We use FTP to send the training data. This is necessary if the
          * training data is large or cannot be easily serialized into an in
@@ -113,9 +116,11 @@ void Requester::divideTask() {
             subtaskData.push_back(trainingData[numSubtasks * subtaskSize + i]);
         }
 
-        TaskRequest subtaskRequest =
-            TaskRequest(1, subtaskData,
-                        "subtaskData_" + std::to_string(numSubtasks) + ".txt");
+        // Build a path by combining the filename and DATA_DIR using path joins
+        string filename = "subtaskData_" + std::to_string(numSubtasks) + ".txt";
+        fs::path path = fs::path(DATA_DIR) / filename;
+
+        TaskRequest subtaskRequest = TaskRequest(1, subtaskData, path.string());
         cout << "FTP: Created file " << subtaskRequest.getTrainingFile()
              << endl;
         subtaskRequest.setLeaderUuid(queuedTask.getLeaderUuid());

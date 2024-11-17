@@ -2,6 +2,7 @@
 #define __UTILITY__
 
 #include <arpa/inet.h>
+#include <filesystem>
 #include <iostream>
 #include <netinet/in.h>
 #include <random>
@@ -14,11 +15,18 @@
 #include <unistd.h>
 #include <unordered_map>
 
+namespace fs = std::filesystem;
+
 /*
  * Defines the universal buffer size used in FTP. Packets are transferred
  * blocks of bytes limited to the specified size.
  */
-#define FTP_BUFFER_SIZE 4096 //
+#define FTP_BUFFER_SIZE 4096
+
+/*
+ * Defines the data location of training files.
+ */
+const std::string DATA_DIR = "data";
 
 struct IpAddress {
     std::string host;
