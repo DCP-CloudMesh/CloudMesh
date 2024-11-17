@@ -1,6 +1,9 @@
 #ifndef __UTILITY__
 #define __UTILITY__
 
+#include "proto/payload.pb.h"
+#include "proto/utility.pb.h"
+
 #include <arpa/inet.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -30,12 +33,12 @@ struct IpAddress {
 };
 
 std::string serializeIpAddress(const IpAddress& ipAddress);
-IpAddress deserializeIpAddress(const std::string& jsonString);
+IpAddress deserializeIpAddress(const std::string& protoString);
 
 typedef std::unordered_map<std::string, IpAddress> AddressTable;
 
-std::string serializeAddressTable(const AddressTable& addressTable);
-AddressTable deserializeAddressTable(const std::string& jsonString);
+utility::AddressTable* serializeAddressTable(const AddressTable& addressTable);
+AddressTable deserializeAddressTable(const utility::AddressTable at);
 
 namespace uuid {
 static std::random_device rd;
