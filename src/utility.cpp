@@ -2,18 +2,6 @@
 
 using namespace std;
 
-// converts an IpAddress object to a utility::IpAddress proto object
-string serializeIpAddress(const IpAddress& ipAddress) {
-    utility::IpAddress j;
-    j.set_ip(ipAddress.host);
-    j.set_port(ipAddress.port);
-
-    string serialized;
-    j.SerializeToString(&serialized);
-
-    return serialized;
-}
-
 IpAddress::IpAddress(const string& host, const unsigned short port)
     : host(host), port(port) {}
 
@@ -23,18 +11,21 @@ IpAddress::IpAddress(const char* host, const char* port) {
     this->port = stoi(portStr);
 }
 
+// converts an IpAddress object to a utility::IpAddress proto object
+utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress) {
+    utility::IpAddress* j = new utility::IpAddress();
+    j->set_ip(ipAddress.host);
+    j->set_port(ipAddress.port);
+
+    return j;
+}
+
 // converts from a string to the utility::IpAddress proto object
-IpAddress deserializeIpAddress(const string& protoString) {
-    utility::IpAddress ipAddress;
+IpAddress deserializeIpAddressFromProto(const utility::IpAddress& proto) {
     IpAddress ip;
 
-    bool success = ipAddress.ParseFromString(protoString);
-    if (!success) {
-        cout << "Failed to parse IpAddress from string" << endl;
-    }
-
-    ip.host = ipAddress.ip();
-    ip.port = ipAddress.port();
+    ip.host = proto.ip();
+    ip.port = proto.port();
     return ip;
 }
 
