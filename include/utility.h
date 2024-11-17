@@ -32,8 +32,8 @@ struct IpAddress {
     IpAddress(const char* host, const char* port);
 };
 
-std::string serializeIpAddress(const IpAddress& ipAddress);
-IpAddress deserializeIpAddress(const std::string& protoString);
+utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress);
+IpAddress deserializeIpAddressFromProto(const utility::IpAddress& proto);
 
 typedef std::unordered_map<std::string, IpAddress> AddressTable;
 
