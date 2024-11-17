@@ -16,7 +16,7 @@ enum PayloadType {
 message PayloadMessage {
     string id = 1;
     string senderId = 2;
-    bytes senderIpAddress = 3;
+    utility.IpAddress senderIpAddress = 3;
     PayloadType payloadType = 4;
 
     oneof payloadObject {
