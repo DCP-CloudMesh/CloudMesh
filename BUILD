@@ -1,3 +1,6 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
 ################################# define local and nolocal #################################
 # Conditional compile definitions based on --define=local=<value> build flag
 config_setting(
@@ -15,7 +18,10 @@ local_defines = select({
 cc_library(
     name = "include_files",
     hdrs = glob(["include/**/*.h"]),
-    deps = ["@com_github_nlohmann_json//:json"],
+    deps = [
+        "//:utility_cc_proto",
+        "//:payload_cc_proto",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -26,6 +32,32 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [":include_files"],
     defines = local_defines, 
+)
+
+################################# proto BUILD target #################################
+proto_library(
+    name = "utility_proto",
+    srcs = ["proto/utility.proto"],
+    visibility = ["//visibility:public"],
+)
+
+cc_proto_library(
+    name = "utility_cc_proto",
+    deps = [":utility_proto"],
+    visibility = ["//visibility:public"],
+)
+
+proto_library(
+    name = "payload_proto",
+    srcs = ["proto/payload.proto"],
+    deps = [":utility_proto"],
+    visibility = ["//visibility:public"],
+)
+
+cc_proto_library(
+    name = "payload_cc_proto",
+    deps = [":payload_proto"],
+    visibility = ["//visibility:public"],
 )
 
 ################################# main BUILD target #################################

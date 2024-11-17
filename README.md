@@ -11,14 +11,14 @@ Follow this to install bazel - https://bazel.build/install
 
 To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following commands:
 ```
-bazel build //...
+bazel build //... --experimental_google_legacy_api
 ```
 
 ## Compilation (Local)
 
 To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER** locally, run the following commands:
 ```
-bazel build //... --define local=true
+bazel build //... --define local=true --experimental_google_legacy_api
 ```
 
 ## Execution
@@ -62,6 +62,41 @@ http_archive(
 )
 ```
 
+## How to add a new proto file
+1. Create your proto file in the `proto` directory. (similar to `payload.proto`)
+2. Add the following to the `BUILD` file in the root folder. Replace `{name}` with the name of your proto file.
+```
+proto_library(
+    name = "{name}_proto",
+    srcs = ["proto/{name}.proto"],
+    visibility = ["//visibility:public"],
+)
+
+cc_proto_library(
+    name = "{name}_cc_proto",
+    deps = [":{name}_proto"],
+    visibility = ["//visibility:public"],
+)
+```
+3. Edit the `include_files` cc_library target in the `BUILD` file in the root folder to include the new proto file.
+```
+cc_library(
+    name = "include_files",
+    hdrs = glob(["include/**/*.h"]),
+    deps = [
+        "//:utility_cc_proto",
+        "//:payload_cc_proto",
+        ... (other proto libraries)
+        "//:{name}_cc_proto",
+    ],
+    visibility = ["//visibility:public"],
+)
+```
+4. Run the build command to auto generate the new proto files.
+5. Import the new proto file by adding this line to the top of the file:
+```
+#include "proto/{name}.pb.h"
+```
 
 ## VSCode Include Path (to get rid of red squiggly lines)
 To include the dependency build files in VSCode, add the following to the includePath for Cpp:
