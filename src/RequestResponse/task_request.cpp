@@ -1,7 +1,6 @@
 #include "../../include/RequestResponse/task_request.h"
 
 using namespace std;
-using namespace nlohmann;
 
 TaskRequest::TaskRequest() : Payload(Type::TASK_REQUEST) {}
 
@@ -73,33 +72,38 @@ AddressTable TaskRequest::getAssignedWorkers() const { return assignedWorkers; }
 
 string TaskRequest::getTrainingFile() const { return trainingFile; }
 
-string TaskRequest::serialize() const {
-    json j;
-    j["numWorkers"] = numWorkers;
-    j["leaderUuid"] = leaderUuid;
-    // Convert unordered_map to JSON object
-    for (const auto& entry : assignedWorkers) {
-        j["assignedWorkers"][entry.first] = serializeIpAddress(entry.second);
+google::protobuf::Message* TaskRequest::serializeToProto() const {
+    payload::TaskRequest* proto = new payload::TaskRequest();
+    proto->set_numworkers(numWorkers);
+    proto->set_leaderuuid(leaderUuid);
+    proto->set_trainingfile(trainingFile);
+
+    for (const auto& entry : trainingData) {
+        proto->add_trainingdata(entry);
     }
-    j["trainingData"] = trainingData;
-    j["trainingFile"] = trainingFile;
-    return j.dump();
+
+    utility::AddressTable* addressTableProto =
+        serializeAddressTable(assignedWorkers);
+    proto->set_allocated_assignedworkers(addressTableProto);
+
+    return proto;
 }
 
-void TaskRequest::deserialize(const string& serializedData) {
-    try {
-        json j = json::parse(serializedData);
-        numWorkers = j["numWorkers"].get<unsigned int>();
-        leaderUuid = j["leaderUuid"].get<string>();
-        trainingData = j["trainingData"].get<vector<int>>();
-        trainingFile = j["trainingFile"].get<string>();
+void TaskRequest::deserializeFromProto(
+    const google::protobuf::Message& protoMessage) {
 
-        assignedWorkers.clear(); // Clear existing data
-        auto workersJson = j["assignedWorkers"];
-        for (auto it = workersJson.begin(); it != workersJson.end(); ++it) {
-            assignedWorkers[it.key()] = deserializeIpAddress(it.value());
-        }
-    } catch (json::exception& e) {
-        cout << "JSON parsing error: " << e.what() << endl;
+    const auto& proto = dynamic_cast<const payload::TaskRequest&>(protoMessage);
+
+    numWorkers = proto.numworkers();
+    leaderUuid = proto.leaderuuid();
+    trainingFile = proto.trainingfile();
+
+    trainingData.clear();
+    for (const auto& entry : proto.trainingdata()) {
+        trainingData.push_back(entry);
     }
+
+    // Get assigned workers
+    assignedWorkers.clear();
+    assignedWorkers = deserializeAddressTable(proto.assignedworkers());
 }

@@ -1,7 +1,6 @@
 #include "../../include/RequestResponse/task_response.h"
 
 using namespace std;
-using namespace nlohmann;
 
 TaskResponse::TaskResponse() : Payload(Type::TASK_RESPONSE) {}
 TaskResponse::TaskResponse(const vector<int>& trainingData)
@@ -9,17 +8,24 @@ TaskResponse::TaskResponse(const vector<int>& trainingData)
 
 vector<int> TaskResponse::getTrainingData() const { return trainingData; }
 
-string TaskResponse::serialize() const {
-    json j;
-    j["trainingData"] = trainingData;
-    return j.dump();
+google::protobuf::Message* TaskResponse::serializeToProto() const {
+    payload::TaskResponse* proto = new payload::TaskResponse();
+
+    for (const auto& value : trainingData) {
+        proto->add_trainingdata(value);
+    }
+
+    return proto;
 }
 
-void TaskResponse::deserialize(const string& serializedData) {
-    try {
-        json j = json::parse(serializedData);
-        trainingData = j["trainingData"].get<vector<int>>();
-    } catch (json::exception& e) {
-        cout << "JSON parsing error: " << e.what() << endl;
+void TaskResponse::deserializeFromProto(
+    const google::protobuf::Message& protoMessage) {
+
+    const payload::TaskResponse& proto =
+        dynamic_cast<const payload::TaskResponse&>(protoMessage);
+
+    trainingData.clear();
+    for (const auto& value : proto.trainingdata()) {
+        trainingData.push_back(value);
     }
 }
