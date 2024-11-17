@@ -68,7 +68,8 @@ string Message::serialize() const {
     payload::PayloadMessage messageProto;
     messageProto.set_id(uuid);
     messageProto.set_senderid(senderUuid);
-    messageProto.set_senderipaddress(serializeIpAddress(senderIpAddr));
+    messageProto.set_allocated_senderipaddress(
+        serializeIpAddressToProto(senderIpAddr));
 
     switch (payload->getType()) {
     case Payload::Type::ACKNOWLEDGEMENT:
@@ -135,7 +136,8 @@ void Message::deserialize(const string& serializedData) {
 
     uuid = messageProto->id();
     senderUuid = messageProto->senderid();
-    senderIpAddr = deserializeIpAddress(messageProto->senderipaddress());
+    senderIpAddr =
+        deserializeIpAddressFromProto(messageProto->senderipaddress());
 
     cout << "Deserializing message with id: " << uuid << " from " << senderUuid
          << " at " << senderIpAddr.host << ":" << senderIpAddr.port << endl;
