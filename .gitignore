@@ -23,4 +23,4 @@ MODULE.bazel.lock
 .DS_Store
 bazel-CloudMesh
 
-data
+data/*

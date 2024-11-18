@@ -96,7 +96,7 @@ void Server::getFileFTP(string filename) {
     datasock = FTP_create_socket_client(data_port, PORT);
     recv(activeConn, msg, FTP_BUFFER_SIZE, 0);
     if (strcmp("nxt", msg) == 0) {
-        if ((fp = fopen(filename.c_str(), "w")) == NULL)
+        if ((fp = fopen(resolveDataFile(filename).c_str(), "w")) == NULL)
             cout << "FTP: Error in creating file" << endl;
         else {
             recv(activeConn, char_num_blks, FTP_BUFFER_SIZE, 0);
