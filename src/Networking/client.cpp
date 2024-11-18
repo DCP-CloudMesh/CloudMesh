@@ -96,13 +96,22 @@ int Client::sendMsg(const char* data) {
         int datasock, lSize, num_blks, num_last_blk, i;
         FILE* fp;
         cout << "FTP: Filename given is: " << filename << endl;
+
+        if (!isFileWithinDataDirectory(filename)) {
+            cerr << "FTP: Requested file is not within the data directory"
+                 << endl;
+            send(CONN, "0", FTP_BUFFER_SIZE, 0);
+            close(CONN);
+            return 1;
+        }
+
         int data_port = 1024;
         sprintf(port, "%d", data_port);
         datasock = FTP_create_socket_server(
             data_port); // creating socket for data connection
         send(CONN, port, FTP_BUFFER_SIZE, 0); // sending port no. to client
         datasock = FTP_accept_conn(datasock); // accepting connnection by client
-        if ((fp = fopen(filename.c_str(), "r")) != NULL) {
+        if ((fp = fopen(resolveDataFile(filename).c_str(), "r")) != NULL) {
             // size of file
             send(CONN, "nxt", FTP_BUFFER_SIZE, 0);
             fseek(fp, 0, SEEK_END);

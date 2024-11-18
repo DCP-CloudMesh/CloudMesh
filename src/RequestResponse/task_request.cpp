@@ -36,9 +36,10 @@ void TaskRequest::setTrainingFile(const string& trainingFile) {
 }
 
 void TaskRequest::setTrainingDataFromFile() {
-    ifstream file(trainingFile);
+    fs::path path = resolveDataFile(trainingFile);
+    ifstream file(path.string());
     if (!file.is_open()) {
-        cerr << "Error opening file: " << trainingFile << endl;
+        cerr << "Error opening file: " << path.string() << endl;
         return;
     }
 
@@ -51,9 +52,10 @@ void TaskRequest::setTrainingDataFromFile() {
 }
 
 void TaskRequest::createTrainingFile() {
-    ofstream file(trainingFile);
+    fs::path path = resolveDataFile(trainingFile);
+    ofstream file(path.string());
     if (!file.is_open()) {
-        cerr << "Error opening file: " << trainingFile << endl;
+        cerr << "Error opening file: " << path.string() << endl;
         return;
     }
 
