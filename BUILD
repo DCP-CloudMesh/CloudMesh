@@ -19,8 +19,7 @@ cc_library(
     name = "include_files",
     hdrs = glob(["include/**/*.h"]),
     deps = [
-        "//:utility_cc_proto",
-        "//:payload_cc_proto",
+        "//:all_cc_proto",
     ],
     visibility = ["//visibility:public"],
 )
@@ -36,27 +35,14 @@ cc_library(
 
 ################################# proto BUILD target #################################
 proto_library(
-    name = "utility_proto",
-    srcs = ["proto/utility.proto"],
+    name = "all_proto",
+    srcs = glob(["proto/**/*.proto"]),
     visibility = ["//visibility:public"],
 )
 
 cc_proto_library(
-    name = "utility_cc_proto",
-    deps = [":utility_proto"],
-    visibility = ["//visibility:public"],
-)
-
-proto_library(
-    name = "payload_proto",
-    srcs = ["proto/payload.proto"],
-    deps = [":utility_proto"],
-    visibility = ["//visibility:public"],
-)
-
-cc_proto_library(
-    name = "payload_cc_proto",
-    deps = [":payload_proto"],
+    name = "all_cc_proto",
+    deps = [":all_proto"],
     visibility = ["//visibility:public"],
 )
 
