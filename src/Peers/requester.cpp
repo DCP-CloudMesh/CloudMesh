@@ -66,7 +66,7 @@ void Requester::divideTask() {
     // divide the large task into subtasks
     // divide "[2, 1, 4, 3, 6, 5, 9, 7, 8, 10]" into as many subtasks as
     // there
-    TaskRequest queuedTask = taskRequests[0];
+    TaskRequest queuedTask = taskRequests.front();
 
     // parse string array as vector
     vector<int> trainingData = queuedTask.getTrainingData();
@@ -83,13 +83,18 @@ void Requester::divideTask() {
     vector<TaskRequest> subtasks;
     for (int i = 0; i < numSubtasks; i++) {
         vector<int> subtaskData;
+
+        if (i == numSubtasks - 1) {
+            subtaskSize += remainder;
+        }
+
         for (int j = 0; j < subtaskSize; j++) {
             subtaskData.push_back(trainingData[i * subtaskSize + j]);
         }
 
         // Build a path by combining the filename and DATA_DIR using path joins
         string filename = "subtaskData_" + std::to_string(i) + ".txt";
-        TaskRequest subtaskRequest = TaskRequest(1, subtaskData, filename);
+        TaskRequest subtaskRequest(1, subtaskData, filename);
         /*
          * We use FTP to send the training data. This is necessary if the
          * training data is large or cannot be easily serialized into an in
@@ -105,26 +110,7 @@ void Requester::divideTask() {
         taskRequests.push_back(subtaskRequest);
     }
 
-    // add the remainder to the last subtask
-    // TODO: this implementation looks wrong. Should add to last subtask instead
-    // of creating a new one.
-    if (remainder != 0) {
-        vector<int> subtaskData;
-        for (int i = 0; i < remainder; i++) {
-            subtaskData.push_back(trainingData[numSubtasks * subtaskSize + i]);
-        }
-
-        // Build a path by combining the filename and DATA_DIR using path joins
-        string filename = "subtaskData_" + std::to_string(numSubtasks) + ".txt";
-        TaskRequest subtaskRequest = TaskRequest(1, subtaskData, filename);
-        cout << "FTP: Created file " << subtaskRequest.getTrainingFile()
-             << endl;
-        subtaskRequest.setLeaderUuid(queuedTask.getLeaderUuid());
-        subtaskRequest.setAssignedWorkers(queuedTask.getAssignedWorkers());
-        taskRequests.push_back(subtaskRequest);
-    }
-
-    // remove the large task request
+    // remove the task request
     taskRequests.erase(taskRequests.begin());
 }
 

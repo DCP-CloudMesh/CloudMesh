@@ -226,3 +226,29 @@ bool isFileWithinDataDirectory(const std::string& filename) {
         return false; // Invalid path format or not within the data directory
     }
 }
+
+int get_available_port() {
+    std::random_device random_num_generator;
+    std::mt19937 gen(random_num_generator());
+    std::uniform_int_distribution<> dis(MIN_PORT, MAX_PORT);
+
+    for (int i = 0; i < MAX_PORT_TRIES; i++) {
+        int port = dis(gen);
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock < 0)
+            continue;
+
+        struct sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_port = htons(port);
+
+        if (::bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+            close(sock);
+            return port;
+        }
+
+        close(sock);
+    }
+    return -1;
+}

@@ -53,6 +53,8 @@ void TaskRequest::setTrainingDataFromFile() {
 
 void TaskRequest::createTrainingFile() {
     fs::path path = resolveDataFile(trainingFile);
+    // create the directory
+    fs::create_directories(path.parent_path());
     ofstream file(path.string());
     if (!file.is_open()) {
         cerr << "Error opening file: " << path.string() << endl;
