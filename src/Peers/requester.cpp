@@ -83,12 +83,13 @@ void Requester::divideTask() {
     vector<TaskRequest> subtasks;
     for (int i = 0; i < numSubtasks; i++) {
         vector<int> subtaskData;
+        int currentSubtaskSize = subtaskSize;
 
         if (i == numSubtasks - 1) {
-            subtaskSize += remainder;
+            currentSubtaskSize += remainder;
         }
 
-        for (int j = 0; j < subtaskSize; j++) {
+        for (int j = 0; j < currentSubtaskSize; j++) {
             subtaskData.push_back(trainingData[i * subtaskSize + j]);
         }
 
