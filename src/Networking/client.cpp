@@ -108,6 +108,8 @@ int Client::sendMsg(const char* data) {
         int data_port = get_available_port();
         if (data_port == -1) {
             cerr << "FTP: No available ports" << endl;
+            send(CONN, "0", FTP_BUFFER_SIZE, 0);
+            close(CONN);
             return 1;
         }
         cout << "FTP: Data port is: " << data_port << endl;
