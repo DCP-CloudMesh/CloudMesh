@@ -24,6 +24,10 @@ namespace fs = std::filesystem;
  */
 #define FTP_BUFFER_SIZE 4096
 
+#define MIN_PORT 49152
+#define MAX_PORT 65535
+#define MAX_PORT_TRIES 10
+
 /*
  * Defines the data location of training files.
  */
@@ -76,5 +80,11 @@ fs::path resolveDataFile(const std::string filename);
  * a filename as input.
  */
 bool isFileWithinDataDirectory(const std::string& filename);
+
+/*
+ * Generates a random port number that is available for use between MIN_PORT and
+ * MAX_PORT.
+ */
+int get_available_port();
 
 #endif // __UTILITY__
