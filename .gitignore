@@ -21,3 +21,6 @@ bazel-CloudMesh
 bazel-testlogs
 MODULE.bazel.lock
 .DS_Store
+bazel-CloudMesh
+
+data/*

@@ -5,9 +5,7 @@ using namespace nlohmann;
 
 Acknowledgement::Acknowledgement() : Payload(Type::ACKNOWLEDGEMENT) {}
 
-string Acknowledgement::serialize() const {
-    return json().dump();
-}
+string Acknowledgement::serialize() const { return json().dump(); }
 
 void Acknowledgement::deserialize(const string& serializedData) {
     try {

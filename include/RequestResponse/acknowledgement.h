@@ -1,9 +1,9 @@
 #ifndef _ACKNOWLEDGEMENT_
 #define _ACKNOWLEDGEMENT_
 
-#include <string>
-#include "payload.h"
 #include "../utility.h"
+#include "payload.h"
+#include <string>
 
 class Acknowledgement : public Payload {
   public:

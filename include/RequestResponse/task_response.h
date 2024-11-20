@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "payload.h"
 #include "../utility.h"
+#include "payload.h"
 
 class TaskResponse : public Payload {
     std::vector<int> trainingData;

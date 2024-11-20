@@ -1,10 +1,10 @@
 #ifndef _MESSAGE_
 #define _MESSAGE_
 
-#include <string>
-#include <memory>
-#include "payload.h"
 #include "../utility.h"
+#include "payload.h"
+#include <memory>
+#include <string>
 
 class Message {
     std::string uuid;

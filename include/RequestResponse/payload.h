@@ -2,8 +2,8 @@
 #define _PAYLOAD_
 
 #include <iostream>
-#include <string>
 #include <nlohmann/json.hpp>
+#include <string>
 
 // Abstract payload class
 class Payload {
@@ -24,7 +24,7 @@ class Payload {
     Type getType() const;
     virtual std::string serialize() const = 0;
     virtual void deserialize(const std::string& serializedData) = 0;
-  
+
   protected:
     Type type;
 };

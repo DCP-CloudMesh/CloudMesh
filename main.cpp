@@ -11,15 +11,10 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     const char* port = "8080";
-    string uuid = "1";
+    string uuid = uuid::generate_uuid_v4();
 
     if (argc >= 2) {
         port = argv[1];
-    }
-
-    // PURELY FOR DEMO PURPOSES. FOLLOWER PEER IS HARD CODED TO PORT 8081
-    if (strcmp(port, "8081")) {
-        uuid = "2";
     }
 
 #if defined(BOOTSTRAP)
@@ -34,6 +29,7 @@ int main(int argc, char* argv[]) {
 #elif defined(REQUESTER)
     cout << "Running as requester." << endl;
     Requester r = Requester(port);
+    int numRequestedWorkers = 3;
 
     string requestType = "c";
     if (argc >= 3) {
@@ -42,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     if (requestType == "c") {
         vector<int> trainingData{2, 1, 4, 3, 6, 5, 9, 7, 8, 10};
-        TaskRequest request = TaskRequest(1, trainingData); // just one provider
+        TaskRequest request = TaskRequest(numRequestedWorkers, trainingData);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
         r.sendTaskRequest();
@@ -53,7 +49,6 @@ int main(int argc, char* argv[]) {
     }
 
 #else
-    cout << "Please specify either --provider or --requester flag."
-         << endl;
+    cout << "Please specify either --provider or --requester flag." << endl;
 #endif
 }
