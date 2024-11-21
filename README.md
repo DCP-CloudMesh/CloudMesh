@@ -3,6 +3,28 @@
 ## Dependencies
 Follow this to install bazel - https://bazel.build/install
 
+### Third Party Dependencies
+
+We can install ZeroMQ for cpp as follows.
+
+```bash
+git clone https://github.com/zeromq/libzmq
+cd libzmq
+mkdir build
+cd build
+sudo cmake .. -DENABLE_DRAFT=ON -DENABLE_CURVE=OFF -DENABLE_WSS=OFF 
+sudo make install
+
+git clone https://github.com/zeromq/cppzmq
+cd cppzmq
+mkdir build
+cd build
+sudo cmake ..
+sudo make install
+```
+
+We install ZeroMQ for Python using `pip install zeromq`.
+
 ## Key Files -
 - BUILD file - Contains the build instructions for the targets.
 - MODULE.bazel file - Contains the module name and the dependencies.
@@ -47,12 +69,15 @@ To execute, run the following commands:
 (8080 is the default port, optional parameter)
 
 ### Requester
+
 ```
-./bazel-bin/requester [8080 [r | c]]
+./bazel-bin/requester [8080 [r | c]] [5555]
 ```
 `8080` is the default port, optional parameter\
 `r` is an optional parameter to request to receive the result of the computation (use same port as original request execution)
 `c` is an optional parameter to request to provide the computation
+`5555` is the default ZeroMQ port. We need to change this for different providers with a gap of 2: 5555, 5557, 5559, ....
+
 ## Clean
 
 ## To clean the build files:

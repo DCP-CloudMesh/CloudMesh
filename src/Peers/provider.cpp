@@ -14,7 +14,8 @@
 
 using namespace std;
 
-Provider::Provider(const char* port, string uuid) : Peer(uuid), zmq_sender(5555) {
+Provider::Provider(const char* port, string uuid, const char* zmq_port)
+    : Peer(uuid), zmq_sender(stoi(zmq_port)), zmq_receiver(stoi(zmq_port) + 1) {
     isBusy = false;
     isLocalBootstrap = false;
 
@@ -53,7 +54,7 @@ void Provider::listen() {
             continue;
         }
 
-        zmq_sender.send("P2P: task request received!");
+        // zmq_sender.send("P2P: task request received!");
 
         // FTP
         shared_ptr<TaskRequest> taskReq =
@@ -177,19 +178,72 @@ void Provider::followerHandleTaskRequest() {
 void Provider::processWorkload() {
     // data is stored in task->training data
     vector<int> data = task->getTrainingData();
-    sort(data.begin(), data.end());
+    // sort(data.begin(), data.end());
+
+    // turn the vector into a string
+    string dataStr = "";
+    for (int i = 0; i < data.size(); i++) {
+        dataStr += to_string(data[i]);
+        if (i != data.size() - 1) {
+            dataStr += ",";
+        }
+    }
+
+    // send data to the worker
+    cout << "Processing workload with data: " << dataStr << endl;
+    zmq_sender.send(dataStr);
+    auto rcvdData = zmq_receiver.receive();
+
+    // turn the string back into a vector
+    data.clear();
+    string num = "";
+    for (int i = 0; i < rcvdData.size(); i++) {
+        if (rcvdData[i] == ',') {
+            data.push_back(stoi(num));
+            num = "";
+        } else {
+            num += rcvdData[i];
+        }
+    }
+    data.push_back(stoi(num));
+    cout << "Received processed data: " << endl;
+    for (int i = 0; i < data.size(); i++) {
+        cout << data[i] << " ";
+    }
+    cout << endl;
+
     // store result in task->trainingdata
     task->setTrainingData(data);
     cout << "Completed assigned workload" << endl;
 }
 
 TaskResponse Provider::aggregateResults(vector<vector<int>> followerData) {
-    // get data from followers and aggregate
-    vector<int> data = task->getTrainingData();
-    for (auto follower : followerData) {
-        data.insert(data.end(), follower.begin(), follower.end());
+    vector<int> curr_data = task->getTrainingData();
+    followerData.push_back(curr_data);
+
+    vector<int> indicies(followerData.size(), 0);
+    vector<int> data;
+
+    while (true) {
+        int minVal = INT_MAX;
+        int minIdx = -1;
+        for (int i = 0; i < followerData.size(); i++) {
+            if (indicies[i] < followerData[i].size() &&
+                followerData[i][indicies[i]] < minVal) {
+                minVal = followerData[i][indicies[i]];
+                minIdx = i;
+            }
+        }
+
+        if (minIdx == -1) {
+            break;
+        }
+
+        data.push_back(minVal);
+        indicies[minIdx]++;
     }
-    sort(data.begin(), data.end());
+
+    task->setTrainingData(data);
     TaskResponse taskResponse(data);
     return taskResponse;
 }
