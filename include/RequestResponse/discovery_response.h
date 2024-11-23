@@ -13,8 +13,9 @@ class DiscoveryResponse : public Payload {
     DiscoveryResponse(const AddressTable& availablePeers);
 
     AddressTable getAvailablePeers() const;
-    std::string serialize() const override;
-    void deserialize(const std::string& serializedData) override;
+    google::protobuf::Message* serializeToProto() const override;
+    void deserializeFromProto(
+        const google::protobuf::Message& protoMessage) override;
 };
 
 #endif // _DISCOVERY_RESPONSE_
