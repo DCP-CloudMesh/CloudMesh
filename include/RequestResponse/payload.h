@@ -2,8 +2,9 @@
 #define _PAYLOAD_
 
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <string>
+
+#include "proto/payload.pb.h"
 
 // Abstract payload class
 class Payload {
@@ -22,8 +23,9 @@ class Payload {
     virtual ~Payload();
 
     Type getType() const;
-    virtual std::string serialize() const = 0;
-    virtual void deserialize(const std::string& serializedData) = 0;
+    virtual google::protobuf::Message* serializeToProto() const = 0;
+    virtual void
+    deserializeFromProto(const google::protobuf::Message& protoMessage) = 0;
 
   protected:
     Type type;

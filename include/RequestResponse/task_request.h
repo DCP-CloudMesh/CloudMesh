@@ -43,8 +43,9 @@ class TaskRequest : public Payload {
     AddressTable getAssignedWorkers() const;
     std::string getTrainingFile() const;
 
-    std::string serialize() const override;
-    void deserialize(const std::string& serializedData) override;
+    google::protobuf::Message* serializeToProto() const override;
+    void deserializeFromProto(
+        const google::protobuf::Message& protoMessage) override;
 };
 
 #endif

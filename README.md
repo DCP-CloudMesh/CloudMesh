@@ -37,7 +37,6 @@ To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following comm
 bazel build //... --experimental_google_legacy_api --config=macos
 ```
 ### Windows
-```
 bazel build //... --experimental_google_legacy_api
 ```
 
@@ -97,6 +96,13 @@ http_archive(
 )
 ```
 
+## How to add a new proto file
+1. Create your proto file in the `proto` directory. (similar to `payload.proto`)
+2. Run the build command to auto generate the new proto files.
+3. Import the new proto file by adding this line to the top of the file:
+```
+#include "proto/{name}.pb.h"
+```
 
 ## VSCode Include Path (to get rid of red squiggly lines)
 To include the dependency build files in VSCode, add the following to the includePath for Cpp:

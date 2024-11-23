@@ -1,15 +1,6 @@
 #include "../include/utility.h"
-#include <nlohmann/json.hpp>
 
 using namespace std;
-using namespace nlohmann;
-
-string serializeIpAddress(const IpAddress& ipAddress) {
-    json j;
-    j["ip"] = ipAddress.host;
-    j["port"] = ipAddress.port;
-    return j.dump();
-}
 
 IpAddress::IpAddress(const string& host, const unsigned short port)
     : host(host), port(port) {}
@@ -20,35 +11,45 @@ IpAddress::IpAddress(const char* host, const char* port) {
     this->port = stoi(portStr);
 }
 
-IpAddress deserializeIpAddress(const string& jsonString) {
-    IpAddress ipAddress;
-    try {
-        json j = json::parse(jsonString);
-        ipAddress.host = j["ip"].get<string>();
-        ipAddress.port = j["port"].get<unsigned short>();
-    } catch (json::exception& e) {
-        cout << "JSON parsing error for IpAddress: " << e.what() << endl;
-    }
-    return ipAddress;
+// converts an IpAddress object to a utility::IpAddress proto object
+utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress) {
+    utility::IpAddress* j = new utility::IpAddress();
+    j->set_ip(ipAddress.host);
+    j->set_port(ipAddress.port);
+
+    return j;
 }
 
-string serializeAddressTable(const AddressTable& addressTable) {
-    json j;
-    for (auto& it : addressTable) {
-        j[it.first] = serializeIpAddress(it.second);
-    }
-    return j.dump();
+// converts from a string to the utility::IpAddress proto object
+IpAddress deserializeIpAddressFromProto(const utility::IpAddress& proto) {
+    IpAddress ip;
+
+    ip.host = proto.ip();
+    ip.port = proto.port();
+    return ip;
 }
 
-AddressTable deserializeAddressTable(const string& jsonString) {
+// converts a AddressTable object to a utility::AddressTable proto object
+utility::AddressTable* serializeAddressTable(const AddressTable& addressTable) {
+    utility::AddressTable* at = new utility::AddressTable();
+
+    for (const auto& it : addressTable) {
+        utility::IpAddress* protoIp = new utility::IpAddress();
+        protoIp->set_ip(it.second.host);
+        protoIp->set_port(it.second.port);
+        at->mutable_address_table()->insert({it.first, *protoIp});
+    }
+
+    return at;
+}
+
+// converts from a utility::AddressTable proto object to the AddressTable object
+AddressTable deserializeAddressTable(const utility::AddressTable at) {
     AddressTable addressTable;
-    try {
-        json j = json::parse(jsonString);
-        for (auto it = j.begin(); it != j.end(); it++) {
-            addressTable[it.key()] = deserializeIpAddress(it.value());
-        }
-    } catch (json::exception& e) {
-        cout << "JSON parsing error for address table: " << e.what() << endl;
+
+    for (const auto& it : at.address_table()) {
+        IpAddress ip(it.second.ip(), it.second.port());
+        addressTable[it.first] = ip;
     }
     return addressTable;
 }

@@ -23,6 +23,7 @@ class Message {
     IpAddress getSenderIpAddr() const;
     std::shared_ptr<Payload> getPayload() const;
     void setPayload(std::shared_ptr<Payload> payload);
+    template <typename T> std::shared_ptr<T> getPayloadAs() const;
     void initializePayload(const std::string& payloadTypeStr);
     std::string serialize() const;
     void deserialize(const std::string& serializedData);

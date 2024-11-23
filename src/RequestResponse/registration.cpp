@@ -4,6 +4,11 @@ using namespace std;
 
 Registration::Registration() : Payload(Type::REGISTRATION) {}
 
-string Registration::serialize() const { return ""; }
+google::protobuf::Message* Registration::serializeToProto() const {
+    return new payload::Registration();
+}
 
-void Registration::deserialize(const string& serializedData) {}
+void Registration::deserializeFromProto(
+    const google::protobuf::Message& protoMessage) {
+    dynamic_cast<const payload::Registration&>(protoMessage);
+}

@@ -49,7 +49,12 @@ int main(int argc, char* argv[]) {
         cout << "Sent task request." << endl;
     } else if (requestType == "r") {
         TaskResponse response = r.getResults();
-        cout << "Received response: " << response.serialize() << endl;
+        auto result = response.getTrainingData();
+        cout << "Received response: ";
+        for (auto& value : result) {
+            cout << value << " ";
+        }
+        cout << endl;
     }
 
 #else

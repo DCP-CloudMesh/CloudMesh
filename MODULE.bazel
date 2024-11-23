@@ -12,3 +12,5 @@ local_repository(
     name = "third_party",
     path = "third_party",
 )
+
+bazel_dep(name = "protobuf", version = "29.0-rc1")

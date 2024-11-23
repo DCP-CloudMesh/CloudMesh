@@ -12,8 +12,9 @@ class DiscoveryRequest : public Payload {
     DiscoveryRequest(const unsigned int peersRequested);
 
     unsigned int getPeersRequested() const;
-    std::string serialize() const override;
-    void deserialize(const std::string& serializedData) override;
+    google::protobuf::Message* serializeToProto() const override;
+    void deserializeFromProto(
+        const google::protobuf::Message& protoMessage) override;
 };
 
 #endif // _DISCOVERY_REQUEST_
