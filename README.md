@@ -15,7 +15,6 @@ To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following comm
 bazel build //... --experimental_google_legacy_api --config=macos
 ```
 ### Windows
-```
 bazel build //... --experimental_google_legacy_api
 ```
 
