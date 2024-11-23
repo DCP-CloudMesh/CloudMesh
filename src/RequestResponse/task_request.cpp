@@ -12,9 +12,9 @@ TaskRequest::TaskRequest(const unsigned int numWorkers,
 
 TaskRequest::TaskRequest(const unsigned int numWorkers,
                          const std::vector<int>& trainingData,
-                         const std::string& trainingFile)
+                         const std::string& trainingFileName)
     : Payload(Type::TASK_REQUEST), numWorkers{numWorkers},
-      trainingData{trainingData}, trainingFile{trainingFile} {
+      trainingData{trainingData}, trainingFile{trainingFileName} {
 
     createTrainingFile();
 }
@@ -36,9 +36,10 @@ void TaskRequest::setTrainingFile(const string& trainingFile) {
 }
 
 void TaskRequest::setTrainingDataFromFile() {
-    ifstream file(trainingFile);
+    fs::path path = resolveDataFile(trainingFile);
+    ifstream file(path.string());
     if (!file.is_open()) {
-        cerr << "Error opening file: " << trainingFile << endl;
+        cerr << "Error opening file: " << path.string() << endl;
         return;
     }
 
@@ -51,9 +52,12 @@ void TaskRequest::setTrainingDataFromFile() {
 }
 
 void TaskRequest::createTrainingFile() {
-    ofstream file(trainingFile);
+    fs::path path = resolveDataFile(trainingFile);
+    // create the directory
+    fs::create_directories(path.parent_path());
+    ofstream file(path.string());
     if (!file.is_open()) {
-        cerr << "Error opening file: " << trainingFile << endl;
+        cerr << "Error opening file: " << path.string() << endl;
         return;
     }
 

@@ -17,7 +17,10 @@ class TaskRequest : public Payload {
     // A task request can have a string that specifies the
     // name of the training file on the local filesystem
     std::string trainingFile;
-    // Creates a file containing the trainingData as trainingFile
+    // Creates a file containing the trainingData as trainingFile, in the
+    // DATA_DIR directory. Only for demo purposes.
+    // In a real-world scenario, the training data
+    // should be provided and this function will be obsolete.
     void createTrainingFile();
 
   public:
@@ -26,7 +29,7 @@ class TaskRequest : public Payload {
                 const std::vector<int>& trainingdata);
     TaskRequest(const unsigned int numWorkers,
                 const std::vector<int>& trainingdata,
-                const std::string& trainingFile);
+                const std::string& trainingFileName);
 
     void setLeaderUuid(const std::string& leaderUuid);
     void setAssignedWorkers(const AddressTable& assignedWorkers);

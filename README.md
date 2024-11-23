@@ -10,6 +10,11 @@ Follow this to install bazel - https://bazel.build/install
 ## Compilation
 
 To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following commands:
+### MacOS
+```
+bazel build //... --experimental_google_legacy_api --config=macos
+```
+### Windows
 ```
 bazel build //... --experimental_google_legacy_api
 ```
@@ -17,6 +22,11 @@ bazel build //... --experimental_google_legacy_api
 ## Compilation (Local)
 
 To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER** locally, run the following commands:
+### MacOS
+```
+bazel build //... --define local=true --experimental_google_legacy_api --config=macos
+```
+### Windows
 ```
 bazel build //... --define local=true --experimental_google_legacy_api
 ```
