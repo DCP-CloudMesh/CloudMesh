@@ -54,8 +54,6 @@ void Provider::listen() {
             continue;
         }
 
-        // zmq_sender.send("P2P: task request received!");
-
         // FTP
         shared_ptr<TaskRequest> taskReq =
             static_pointer_cast<TaskRequest>(requesterPayload);
@@ -178,7 +176,6 @@ void Provider::followerHandleTaskRequest() {
 void Provider::processWorkload() {
     // data is stored in task->training data
     vector<int> data = task->getTrainingData();
-    // sort(data.begin(), data.end());
 
     // turn the vector into a string
     string dataStr = "";
