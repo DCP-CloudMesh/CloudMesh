@@ -160,7 +160,16 @@ void Provider::followerHandleTaskRequest() {
     while (client->setupConn(leaderIp, "tcp") == -1) {
         sleep(5);
     }
-    client->sendMsg(task->serialize().c_str());
+
+    // send results back to leader
+    shared_ptr<TaskResponse> payload =
+        make_shared<TaskResponse>(task->getTrainingData());
+    Message msg(uuid, IpAddress(host, port), payload);
+
+    // keep trying to send results back to leader
+    while (client->sendMsg(msg.serialize().c_str()) != 0) {
+        sleep(5);
+    }
 }
 
 void Provider::processWorkload() {
