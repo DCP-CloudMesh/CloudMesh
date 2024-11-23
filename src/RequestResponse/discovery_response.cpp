@@ -1,7 +1,6 @@
 #include "../../include/RequestResponse/discovery_response.h"
 
 using namespace std;
-using namespace nlohmann;
 
 DiscoveryResponse::DiscoveryResponse() : Payload(Type::DISCOVERY_RESPONSE) {}
 DiscoveryResponse::DiscoveryResponse(const AddressTable& availablePeers)
@@ -11,18 +10,22 @@ AddressTable DiscoveryResponse::getAvailablePeers() const {
     return availablePeers;
 }
 
-string DiscoveryResponse::serialize() const {
-    json j;
-    j["availablePeers"] = serializeAddressTable(availablePeers);
-    return j.dump();
+google::protobuf::Message* DiscoveryResponse::serializeToProto() const {
+    payload::DiscoveryResponse* proto = new payload::DiscoveryResponse();
+    utility::AddressTable* atProto = serializeAddressTable(availablePeers);
+    proto->set_allocated_availablepeers(atProto);
+
+    return proto;
 }
 
-void DiscoveryResponse::deserialize(const string& serializedData) {
-    try {
-        json j = json::parse(serializedData);
-        availablePeers =
-            deserializeAddressTable(j["availablePeers"].get<string>());
-    } catch (json::exception& e) {
-        cout << "JSON parsing error: " << e.what() << endl;
-    }
+void DiscoveryResponse::deserializeFromProto(
+    const google::protobuf::Message& protoMessage) {
+
+    const payload::DiscoveryResponse& discoveryResponseProto =
+        dynamic_cast<const payload::DiscoveryResponse&>(protoMessage);
+    const utility::AddressTable& addressTableProto =
+        discoveryResponseProto.availablepeers();
+
+    availablePeers.clear();
+    availablePeers = deserializeAddressTable(addressTableProto);
 }

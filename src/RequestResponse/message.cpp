@@ -1,5 +1,4 @@
 #include <iostream>
-#include <nlohmann/json.hpp>
 
 #include "../../include/RequestResponse/acknowledgement.h"
 #include "../../include/RequestResponse/discovery_request.h"
@@ -11,7 +10,6 @@
 #include "../../include/utility.h"
 
 using namespace std;
-using namespace nlohmann;
 
 Message::Message() : payload{nullptr} { uuid = uuid::generate_uuid_v4(); }
 
@@ -53,47 +51,131 @@ void Message::initializePayload(const string& payloadTypeStr) {
     }
 }
 
+template <typename T> std::shared_ptr<T> Message::getPayloadAs() const {
+    if (!payload) {
+        return nullptr;
+    }
+
+    std::shared_ptr<T> converted = std::dynamic_pointer_cast<T>(payload);
+    if (!converted) {
+        throw std::runtime_error("Invalid payload type cast requested");
+    }
+
+    return converted;
+}
+
 string Message::serialize() const {
-    json j;
-    j["id"] = uuid;
-    j["senderId"] = senderUuid;
-    j["senderIpAddress"] = serializeIpAddress(senderIpAddr);
+    payload::PayloadMessage messageProto;
+    messageProto.set_id(uuid);
+    messageProto.set_senderid(senderUuid);
+    messageProto.set_allocated_senderipaddress(
+        serializeIpAddressToProto(senderIpAddr));
+
     switch (payload->getType()) {
     case Payload::Type::ACKNOWLEDGEMENT:
-        j["payloadType"] = "ACKNOWLEDGEMENT";
+        messageProto.set_payloadtype(payload::PayloadType::ACKNOWLEDGEMENT);
         break;
     case Payload::Type::REGISTRATION:
-        j["payloadType"] = "REGISTRATION";
+        messageProto.set_payloadtype(payload::PayloadType::REGISTRATION);
         break;
-    case Payload::Type::DISCOVERY_REQUEST:
-        j["payloadType"] = "DISCOVERY_REQUEST";
+    case Payload::Type::DISCOVERY_REQUEST: {
+        messageProto.set_payloadtype(payload::PayloadType::DISCOVERY_REQUEST);
+        shared_ptr<DiscoveryRequest> discoveryReq =
+            getPayloadAs<DiscoveryRequest>();
+        auto* dvProto = static_cast<payload::DiscoveryRequest*>(
+            discoveryReq->serializeToProto());
+        messageProto.set_allocated_discoveryrequest(dvProto);
         break;
-    case Payload::Type::DISCOVERY_RESPONSE:
-        j["payloadType"] = "DISCOVERY_RESPONSE";
-        break;
-    case Payload::Type::TASK_REQUEST:
-        j["payloadType"] = "TASK_REQUEST";
-        break;
-    case Payload::Type::TASK_RESPONSE:
-        j["payloadType"] = "TASK_RESPONSE";
-        break;
-    default:
-        j["payloadType"] = "";
     }
-    j["payload"] = payload->serialize();
+    case Payload::Type::DISCOVERY_RESPONSE: {
+        messageProto.set_payloadtype(payload::PayloadType::DISCOVERY_RESPONSE);
+        shared_ptr<DiscoveryResponse> discoveryResp =
+            getPayloadAs<DiscoveryResponse>();
+        auto* drProto = static_cast<payload::DiscoveryResponse*>(
+            discoveryResp->serializeToProto());
 
-    return j.dump();
+        messageProto.set_allocated_discoveryresponse(drProto);
+        break;
+    }
+    case Payload::Type::TASK_REQUEST: {
+        messageProto.set_payloadtype(payload::PayloadType::TASK_REQUEST);
+        shared_ptr<TaskRequest> taskReq = getPayloadAs<TaskRequest>();
+        auto* taskReqProto =
+            static_cast<payload::TaskRequest*>(taskReq->serializeToProto());
+
+        messageProto.set_allocated_taskrequest(taskReqProto);
+
+        break;
+    }
+    case Payload::Type::TASK_RESPONSE: {
+        messageProto.set_payloadtype(payload::PayloadType::TASK_RESPONSE);
+        shared_ptr<TaskResponse> taskResp = getPayloadAs<TaskResponse>();
+        auto* taskRespProto =
+            static_cast<payload::TaskResponse*>(taskResp->serializeToProto());
+
+        messageProto.set_allocated_taskresponse(taskRespProto);
+
+        break;
+    }
+    default:
+        cerr << "Unknown type" << endl;
+        break;
+    }
+
+    string serialized;
+    messageProto.SerializeToString(&serialized);
+
+    return serialized;
 }
 
 void Message::deserialize(const string& serializedData) {
-    try {
-        json j = json::parse(serializedData);
-        uuid = j["id"].get<string>();
-        senderUuid = j["senderId"].get<string>();
-        senderIpAddr = deserializeIpAddress(j["senderIpAddress"].get<string>());
-        initializePayload(j["payloadType"].get<string>());
-        payload->deserialize(j["payload"].get<string>());
-    } catch (json::exception& e) {
-        cout << "JSON parsing error: " << e.what() << endl;
+    auto messageProto = new payload::PayloadMessage();
+    if (!messageProto->ParseFromString(serializedData)) {
+        cerr << "Failed to parse Message from string" << endl;
+    }
+
+    uuid = messageProto->id();
+    senderUuid = messageProto->senderid();
+    senderIpAddr =
+        deserializeIpAddressFromProto(messageProto->senderipaddress());
+
+    cout << "Deserializing message with id: " << uuid << " from " << senderUuid
+         << " at " << senderIpAddr.host << ":" << senderIpAddr.port << endl;
+
+    string payloadType = payload::PayloadType_Name(messageProto->payloadtype());
+    initializePayload(payloadType);
+
+    // deserialize payloads
+    if (messageProto->payloadtype() ==
+        payload::PayloadType::DISCOVERY_REQUEST) {
+        const payload::DiscoveryRequest& discoveryRequest =
+            messageProto->discoveryrequest();
+        payload->deserializeFromProto(discoveryRequest);
+    } else if (messageProto->payloadtype() ==
+               payload::PayloadType::DISCOVERY_RESPONSE) {
+        const payload::DiscoveryResponse& discoveryResponse =
+            messageProto->discoveryresponse();
+        payload->deserializeFromProto(discoveryResponse);
+    } else if (messageProto->payloadtype() ==
+               payload::PayloadType::TASK_REQUEST) {
+        const payload::TaskRequest& taskRequest = messageProto->taskrequest();
+        payload->deserializeFromProto(taskRequest);
+    } else if (messageProto->payloadtype() ==
+               payload::PayloadType::TASK_RESPONSE) {
+        const payload::TaskResponse& taskResponse =
+            messageProto->taskresponse();
+        payload->deserializeFromProto(taskResponse);
+    } else if (messageProto->payloadtype() ==
+               payload::PayloadType::REGISTRATION) {
+        const payload::Registration& registration =
+            messageProto->registration();
+        payload->deserializeFromProto(registration);
+    } else if (messageProto->payloadtype() ==
+               payload::PayloadType::ACKNOWLEDGEMENT) {
+        const payload::Acknowledgement& ack = messageProto->acknowledgement();
+        payload->deserializeFromProto(ack);
+    } else {
+        cerr << "Unknown or unsupported payload type for deserialization"
+             << endl;
     }
 }
