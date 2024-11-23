@@ -5,8 +5,9 @@ Follow this to install bazel - https://bazel.build/install
 
 ### Third Party Dependencies
 
-We can install ZeroMQ for cpp as follows.
+We can install ZeroMQ for cpp as follows. Run the following starting from the `CloudMesh/third_party/` folder.
 
+#### `libzmq` dependency
 ```bash
 git clone https://github.com/zeromq/libzmq
 cd libzmq
@@ -14,7 +15,10 @@ mkdir build
 cd build
 sudo cmake .. -DENABLE_DRAFT=ON -DENABLE_CURVE=OFF -DENABLE_WSS=OFF 
 sudo make install
+```
 
+#### `cppzmq` dependency
+```bash
 git clone https://github.com/zeromq/cppzmq
 cd cppzmq
 mkdir build
