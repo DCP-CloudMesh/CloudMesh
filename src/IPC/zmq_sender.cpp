@@ -1,6 +1,6 @@
 #include "../../include/IPC/zmq_sender.h"
 
-ZMQSender::ZMQSender(unsigned int port) 
+ZMQSender::ZMQSender(unsigned int port)
     : port(port), context(1), socket(context, zmq::socket_type::req) {
     const std::string address = "tcp://localhost:" + std::to_string(port);
     socket.connect(address);
