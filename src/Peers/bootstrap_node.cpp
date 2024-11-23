@@ -30,8 +30,8 @@ const char* BootstrapNode::getServerPort() {
 void BootstrapNode::registerPeer(const string& peerUuid,
                                  const IpAddress& peerIpAddr) {
     providerPeers[peerUuid] = peerIpAddr;
-    cout << "Registered peer " << peerUuid << " ("
-         << serializeIpAddress(peerIpAddr) << ")" << endl;
+    cout << "Registered peer " << peerUuid << " (" << peerIpAddr.host << ":"
+         << peerIpAddr.port << ")" << endl;
 }
 
 AddressTable BootstrapNode::discoverPeers(const string& peerUuid,
