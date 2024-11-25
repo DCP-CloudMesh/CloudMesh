@@ -187,8 +187,9 @@ void Provider::processWorkload() {
     }
 
     // send data to the worker
-    cout << "Processing workload with data: " << dataStr << endl;
+    cout << "Unprocessed workload with data: " << dataStr << endl;
     zmq_sender.send(dataStr);
+    cout << "Waiting for processed data..." << endl;
     auto rcvdData = zmq_receiver.receive();
 
     // turn the string back into a vector
@@ -203,7 +204,7 @@ void Provider::processWorkload() {
         }
     }
     data.push_back(stoi(num));
-    cout << "Received processed data: " << endl;
+    cout << "Processed workload with data: ";
     for (int i = 0; i < data.size(); i++) {
         cout << data[i] << " ";
     }
@@ -238,6 +239,11 @@ TaskResponse Provider::aggregateResults(vector<vector<int>> followerData) {
 
         data.push_back(minVal);
         indicies[minIdx]++;
+    }
+
+    cout << "Aggregated results: ";
+    for (int i = 0; i < data.size(); i++) {
+        cout << data[i] << " ";
     }
 
     task->setTrainingData(data);

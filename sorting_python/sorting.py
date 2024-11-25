@@ -1,7 +1,7 @@
 import zmq
 
 # Set up the context and responder socket
-base_port = 5559
+base_port = int(input("Enter the base port number: "))
 port_rec = base_port
 port_send = base_port + 1
 
@@ -16,7 +16,8 @@ sender.connect("tcp://localhost:" + str(port_send))
 while True:
     # Wait for next request from client
     message = responder.recv_string()
-    print("Received request:", message)
+    responder.send_string("")
+    print("Unprocessed workload:", message)
 
     # do simple sorting work
     message = message.split(",")
@@ -24,6 +25,7 @@ while True:
     message.sort()
     message = [str(i) for i in message]
     message = ",".join(message)
+    print(f"Processed workload: {message}")
 
     # Send a reply back to the client
     sender.send_string(message)

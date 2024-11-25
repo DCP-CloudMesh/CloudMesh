@@ -67,19 +67,19 @@ To execute, run the following commands:
 
 ### Provider
 ```
-./bazel-bin/provider [8080]
+./bazel-bin/provider [8080] [5555]
 ``` 
 (8080 is the default port, optional parameter)
+`5555` is the default ZeroMQ port. We need to change this for different providers with a gap of 2: 5555, 5557, 5559, ....
 
 ### Requester
 
 ```
-./bazel-bin/requester [8080 [r | c]] [5555]
+./bazel-bin/requester [8080 [r | c]] 
 ```
 `8080` is the default port, optional parameter\
 `r` is an optional parameter to request to receive the result of the computation (use same port as original request execution)
 `c` is an optional parameter to request to provide the computation
-`5555` is the default ZeroMQ port. We need to change this for different providers with a gap of 2: 5555, 5557, 5559, ....
 
 ## Clean
 
