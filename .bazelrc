@@ -3,3 +3,5 @@ build --copt=-Wall
 build --copt=-pthread
 build --linkopt=-lpthread
 build:macos --copt=-mmacosx-version-min=10.15
+build:macos --linkopt=-L/opt/homebrew/lib
+build:macos --linkopt=-lgnutls

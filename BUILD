@@ -29,7 +29,11 @@ cc_library(
     srcs = glob(["src/**/*.cpp"]),
     hdrs = glob(["src/**/*.h"]),
     visibility = ["//visibility:public"],
-    deps = [":include_files"],
+    deps = [
+        ":include_files",
+        "@third_party//:libzmq",
+        "@third_party//:cppzmq",
+    ],
     defines = local_defines, 
 )
 
@@ -58,7 +62,9 @@ cc_binary(
     name = "provider",
     srcs = ["main.cpp"],
     defines = ["PROVIDER=1"] + local_defines,                    
-    deps = [":src_files"],
+    deps = [
+        ":src_files",
+    ],
 )
 
 cc_binary(
