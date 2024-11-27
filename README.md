@@ -39,7 +39,7 @@ sudo cmake ..
 sudo make install
 ```
 
-We install ZeroMQ for Python using `pip install zeromq`.
+We install ZeroMQ for Python using `pip install pyzmq`.
 
 ## Key Files -
 - BUILD file - Contains the build instructions for the targets.
