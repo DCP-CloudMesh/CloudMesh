@@ -7,6 +7,18 @@ Follow this to install bazel - https://bazel.build/install
 
 We can install ZeroMQ for cpp as follows. Run the following starting from the `CloudMesh/third_party/` folder.
 
+#### Mac Dependencies
+
+May need to install the following when troubleshooting issues
+
+```bash
+brew install gnutls
+```
+
+#### Window Dependencies
+
+To be determined (???)
+
 #### `libzmq` dependency
 ```bash
 git clone https://github.com/zeromq/libzmq
@@ -41,6 +53,7 @@ To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following comm
 bazel build //... --experimental_google_legacy_api --config=macos
 ```
 ### Windows
+```
 bazel build //... --experimental_google_legacy_api
 ```
 
