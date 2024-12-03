@@ -1,2 +1,3 @@
 # run this script to format all the source code
-find . -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
+find . \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \) \
+    -not -path "./third_party/*" | xargs clang-format -i
