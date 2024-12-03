@@ -90,4 +90,9 @@ bool isFileWithinDataDirectory(const std::string& filename);
  */
 int get_available_port();
 
+std::vector<std::string> getMatchingDataFiles(const std::regex& pattern,
+                                              const std::string& directory);
+
+std::regex convertToRegexPattern(const std::string& pattern);
+
 #endif // __UTILITY__
