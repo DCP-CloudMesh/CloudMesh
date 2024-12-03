@@ -253,3 +253,28 @@ int get_available_port() {
     }
     return -1;
 }
+
+vector<string> getMatchingDataFiles(const regex& pattern,
+                                    const string& directory) {
+    vector<string> getMatchingDataFiles;
+    for (const auto& entry :
+         filesystem::recursive_directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            const string filename = entry.path().string();
+            if (regex_match(filename, pattern)) {
+                getMatchingDataFiles.push_back(filename);
+            }
+        }
+    }
+
+    return getMatchingDataFiles;
+}
+
+regex convertToRegexPattern(const string& pattern) {
+    try {
+        return regex(pattern, regex_constants::icase); // case insensitive
+    } catch (const std::regex_error& e) {
+        cerr << "Regex construction failed: " << e.what() << endl;
+        return regex();
+    }
+}
