@@ -24,5 +24,5 @@ MODULE.bazel.lock
 bazel-CloudMesh
 
 data/*
-third_party/cppzmq/*
-third_party/libzmq/*
+third_party/cppzmq*
+third_party/libzmq*
