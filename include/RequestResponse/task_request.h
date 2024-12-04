@@ -12,36 +12,31 @@ class TaskRequest : public Payload {
     unsigned int numWorkers;
     std::string leaderUuid;
     AddressTable assignedWorkers;
-    // A task request can have the training data as an array of integers
-    std::vector<int> trainingData;
-    // A task request can have a string that specifies the
-    // name of the training file on the local filesystem
-    std::string trainingFile;
-    // Creates a file containing the trainingData as trainingFile, in the
-    // DATA_DIR directory. Only for demo purposes.
-    // In a real-world scenario, the training data
-    // should be provided and this function will be obsolete.
-    void createTrainingFile();
+    // A globPattern for the names of the training
+    // data files necessitates the creation of
+    // training data index files
+    std::string globPattern;
+    // Each transported task request should contain an index
+    // file that contains the names of the training data files
+    std::string trainingDataIndexFilename;
 
   public:
+    // Tagged "union" (to-do: c++17 supports variant class)
+    enum TaskRequestType { NONE, GLOB_PATTERN, INDEX_FILENAME } taskRequestType;
     TaskRequest();
-    TaskRequest(const unsigned int numWorkers,
-                const std::vector<int>& trainingdata);
-    TaskRequest(const unsigned int numWorkers,
-                const std::vector<int>& trainingdata,
-                const std::string& trainingFileName);
+    TaskRequest(const unsigned int numWorkers, const std::string& data,
+                TaskRequestType type);
 
     void setLeaderUuid(const std::string& leaderUuid);
     void setAssignedWorkers(const AddressTable& assignedWorkers);
-    void setTrainingData(const std::vector<int>& trainingData);
-    void setTrainingFile(const std::string& trainingFile);
-    void setTrainingDataFromFile();
+    void setGlobPattern(const std::string& pattern);
+    void setTrainingDataIndexFilename(const std::string& filename);
 
     unsigned int getNumWorkers() const;
-    std::vector<int> getTrainingData() const;
     std::string getLeaderUuid() const;
     AddressTable getAssignedWorkers() const;
-    std::string getTrainingFile() const;
+    std::string getGlobPattern() const;
+    std::string getTrainingDataIndexFilename() const;
 
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(

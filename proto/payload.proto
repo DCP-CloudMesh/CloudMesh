@@ -37,8 +37,10 @@ message TaskRequest {
     int32 numWorkers = 1;
     string leaderUuid = 2;
     utility.AddressTable assignedWorkers = 3;
-    repeated int32 trainingData = 4;
-    string trainingFile = 5;
+    oneof training_data_source {
+        string glob_pattern = 4;
+        string training_data_index_filename = 5;
+    }
 }
 
 message TaskResponse { repeated int32 trainingData = 1; }
