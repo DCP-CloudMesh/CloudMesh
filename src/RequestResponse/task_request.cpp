@@ -36,6 +36,19 @@ void TaskRequest::setTrainingDataIndexFilename(const std::string& filename) {
     globPattern.clear();
 }
 
+void TaskRequest::writeToTrainingDataIndexFile(
+    const vector<string>& trainingDataFiles) const {
+    fs::path indexFilePath = resolveDataFile(trainingDataIndexFilename);
+
+    ofstream indexFile(indexFilePath);
+    if (indexFile.is_open()) {
+        for (const string& filename : trainingDataFiles) {
+            indexFile << filename << endl;
+        }
+        indexFile.close();
+    }
+}
+
 unsigned int TaskRequest::getNumWorkers() const { return numWorkers; }
 
 string TaskRequest::getLeaderUuid() const { return leaderUuid; }
@@ -48,6 +61,26 @@ std::string TaskRequest::getGlobPattern() const {
 
 std::string TaskRequest::getTrainingDataIndexFilename() const {
     return (taskRequestType == INDEX_FILENAME) ? trainingDataIndexFilename : "";
+}
+
+vector<string> TaskRequest::getTrainingDataFiles() const {
+    vector<string> trainingDataFiles;
+
+    if (taskRequestType == GLOB_PATTERN) {
+        regex pattern = convertToRegexPattern(globPattern);
+        trainingDataFiles = getMatchingDataFiles(pattern, DATA_DIR);
+    } else if (taskRequestType == INDEX_FILENAME) {
+        ifstream indexFile(resolveDataFile(trainingDataIndexFilename));
+        if (indexFile.is_open()) {
+            string line;
+            while (getline(indexFile, line)) {
+                trainingDataFiles.push_back(line);
+            }
+            indexFile.close();
+        }
+    }
+
+    return trainingDataFiles;
 }
 
 google::protobuf::Message* TaskRequest::serializeToProto() const {

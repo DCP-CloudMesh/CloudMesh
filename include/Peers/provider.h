@@ -17,7 +17,8 @@ class Provider : public Peer {
     bool isBusy;
     bool isLocalBootstrap;
     bool isLeader;
-    std::unique_ptr<TaskRequest> task;
+    std::unique_ptr<TaskRequest> taskRequest;
+    std::unique_ptr<TaskResponse> taskResponse;
     ZMQSender zmq_sender;
     ZMQReceiver zmq_receiver;
 
@@ -31,6 +32,8 @@ class Provider : public Peer {
     void followerHandleTaskRequest();
     void processData();
     void processWorkload(); // worker function to manipulate the TaskRequest
+    std::vector<int>
+    ingestTrainingData(); // worker function to load training data into memory
     TaskResponse aggregateResults(std::vector<std::vector<int>> followerData);
 };
 
