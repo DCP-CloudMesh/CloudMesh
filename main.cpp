@@ -41,8 +41,9 @@ int main(int argc, char* argv[]) {
     }
 
     if (requestType == "c") {
-        vector<int> trainingData{2, 1, 4, 3, 6, 5, 9, 7, 8, 10};
-        TaskRequest request = TaskRequest(numRequestedWorkers, trainingData);
+        TaskRequest request =
+            TaskRequest(numRequestedWorkers, "subtaskData_.*\\.txt$",
+                        TaskRequestType::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
         r.sendTaskRequest();
