@@ -42,8 +42,8 @@ int main(int argc, char* argv[]) {
 
     if (requestType == "c") {
         TaskRequest request =
-            TaskRequest(numRequestedWorkers, "subtaskData_.*\\.txt$",
-                        TaskRequestType::GLOB_PATTERN);
+            TaskRequest(numRequestedWorkers, ".*subtaskData_.*\\.txt$",
+                        TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
         r.sendTaskRequest();

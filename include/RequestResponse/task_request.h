@@ -31,6 +31,8 @@ class TaskRequest : public Payload {
     void setAssignedWorkers(const AddressTable& assignedWorkers);
     void setGlobPattern(const std::string& pattern);
     void setTrainingDataIndexFilename(const std::string& filename);
+    void writeToTrainingDataIndexFile(
+        const std::vector<std::string>& trainingDataFiles) const;
 
     unsigned int getNumWorkers() const;
     std::string getLeaderUuid() const;
@@ -38,6 +40,8 @@ class TaskRequest : public Payload {
     std::string getGlobPattern() const;
     std::string getTrainingDataIndexFilename() const;
 
+    // Retrieves all data files referenced in this task request
+    std::vector<std::string> getTrainingDataFiles() const;
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(
         const google::protobuf::Message& protoMessage) override;

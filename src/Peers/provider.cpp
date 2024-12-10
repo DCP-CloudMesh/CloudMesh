@@ -54,31 +54,29 @@ void Provider::listen() {
             continue;
         }
 
-        // FTP
+        // Parse and assign member field with task request received
         shared_ptr<TaskRequest> taskReq =
             static_pointer_cast<TaskRequest>(requesterPayload);
-        task = make_unique<TaskRequest>(std::move(*taskReq));
+        taskRequest = make_unique<TaskRequest>(std::move(*taskReq));
 
-        if (task->getTrainingFile().empty()) {
-            // if training file is not set, then we continue assuming the
-            // trainingData field has been set
+        // Ensure task request contains a non-empty training data index field
+        if (taskRequest->taskRequestType != TaskRequest::INDEX_FILENAME ||
+            taskRequest->getTrainingDataIndexFilename().empty()) {
             server->replyToConn("Provider ID: " + uuid +
-                                " : Deserialized "
-                                "task request. Now processing workload.\n");
+                                " : Task request does not contain a valid "
+                                "training data index file.");
             server->closeConn();
-        } else {
-            // if training file is not empty, then download the training file
-            // from the requester and set the trainingData field from the file
-            cout << "FTP: requesting " << task->getTrainingFile() << endl;
-            server->getFileFTP(task->getTrainingFile());
-
-            // add the training data from the file fetched
-            task->setTrainingDataFromFile();
-
-            server->closeConn();
+            continue;
         }
 
-        if (task->getLeaderUuid() == uuid) {
+        // Download and parse training data index file from requester
+        cout << "FTP: requesting index: "
+             << taskRequest->getTrainingDataIndexFilename() << endl;
+        server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
+
+        server->closeConn();
+
+        if (taskRequest->getLeaderUuid() == uuid) {
             leaderHandleTaskRequest(requesterIpAddr);
         } else {
             followerHandleTaskRequest();
@@ -91,7 +89,7 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     thread workloadThread(&Provider::processWorkload, this);
 
     vector<vector<int>> followerData{};
-    while (followerData.size() < task->getAssignedWorkers().size() - 1) {
+    while (followerData.size() < taskRequest->getAssignedWorkers().size() - 1) {
         cout << "\nWaiting for follower peer to connect..." << endl;
         while (!server->acceptConn())
             ;
@@ -156,15 +154,15 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 void Provider::followerHandleTaskRequest() {
     processWorkload();
     cout << "Waiting for connection back to leader" << endl;
-    IpAddress leaderIp = task->getAssignedWorkers()[task->getLeaderUuid()];
+    IpAddress leaderIp =
+        taskRequest->getAssignedWorkers()[taskRequest->getLeaderUuid()];
     // busy wait until connection is established with the leader
     while (client->setupConn(leaderIp, "tcp") == -1) {
         sleep(5);
     }
 
     // send results back to leader
-    shared_ptr<TaskResponse> payload =
-        make_shared<TaskResponse>(task->getTrainingData());
+    shared_ptr<TaskResponse> payload = std::move(taskResponse);
     Message msg(uuid, IpAddress(host, port), payload);
 
     // keep trying to send results back to leader
@@ -173,9 +171,40 @@ void Provider::followerHandleTaskRequest() {
     }
 }
 
+vector<int> Provider::ingestTrainingData() {
+    vector<string> requiredTrainingFiles = taskRequest->getTrainingDataFiles();
+    cout << "Task requires " << requiredTrainingFiles.size()
+         << " training files" << endl;
+    // Ensure all required training data files are present
+    for (const string& filename : requiredTrainingFiles) {
+        if (!isFileWithinDataDirectory(filename)) {
+            cout << "FTP: requesting " << filename << endl;
+            server->getFileFTP(filename);
+        }
+    }
+    cout << "All training files are now present" << endl;
+
+    // read content in the training data files
+    vector<int> data;
+    for (const string& filename : requiredTrainingFiles) {
+        ifstream file(resolveDataFile(filename));
+        if (!file.is_open()) {
+            cerr << "Error opening file: " << filename << endl;
+            exit(1);
+        }
+
+        string line;
+        while (getline(file, line)) {
+            data.push_back(stoi(line));
+        }
+        file.close();
+    }
+
+    return data;
+}
+
 void Provider::processWorkload() {
-    // data is stored in task->training data
-    vector<int> data = task->getTrainingData();
+    vector<int> data = ingestTrainingData();
 
     // turn the vector into a string
     string dataStr = "";
@@ -210,13 +239,13 @@ void Provider::processWorkload() {
     }
     cout << endl;
 
-    // store result in task->trainingdata
-    task->setTrainingData(data);
+    // store result in taskResponse->trainingdata
+    taskResponse = make_unique<TaskResponse>(data);
     cout << "Completed assigned workload" << endl;
 }
 
 TaskResponse Provider::aggregateResults(vector<vector<int>> followerData) {
-    vector<int> curr_data = task->getTrainingData();
+    vector<int> curr_data = taskResponse->getTrainingData();
     followerData.push_back(curr_data);
 
     vector<int> indicies(followerData.size(), 0);
@@ -246,7 +275,6 @@ TaskResponse Provider::aggregateResults(vector<vector<int>> followerData) {
         cout << data[i] << " ";
     }
 
-    task->setTrainingData(data);
-    TaskResponse taskResponse(data);
-    return taskResponse;
+    taskResponse->setTrainingData(data);
+    return *taskResponse;
 }

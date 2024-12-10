@@ -8,6 +8,10 @@ TaskResponse::TaskResponse(const vector<int>& trainingData)
 
 vector<int> TaskResponse::getTrainingData() const { return trainingData; }
 
+void TaskResponse::setTrainingData(const vector<int>& trainingData) {
+    this->trainingData = trainingData;
+}
+
 google::protobuf::Message* TaskResponse::serializeToProto() const {
     payload::TaskResponse* proto = new payload::TaskResponse();
 

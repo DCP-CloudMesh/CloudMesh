@@ -4,6 +4,7 @@
 #include "../../include/RequestResponse/discovery_request.h"
 #include "../../include/RequestResponse/discovery_response.h"
 #include "../../include/RequestResponse/message.h"
+#include "../../include/RequestResponse/task_request.h"
 #include "../../include/utility.h"
 
 using namespace std;
@@ -61,20 +62,16 @@ void Requester::setTaskRequest(TaskRequest request_) {
 }
 
 void Requester::divideTask() {
-    // TODO: use deque (dividing into subtasks should remain at front of queue)
-
-    // divide the large task into subtasks
-    // divide "[2, 1, 4, 3, 6, 5, 9, 7, 8, 10]" into as many subtasks as
-    // there
     TaskRequest queuedTask = taskRequests.front();
 
-    // parse string array as vector
-    vector<int> trainingData = queuedTask.getTrainingData();
+    // obtain list of training files
+    vector<string> trainingFiles = queuedTask.getTrainingDataFiles();
+    cout << "Found " << trainingFiles.size() << " training files" << endl;
 
     // divide the vector into subvectors
     int numSubtasks = queuedTask.getNumWorkers();
-    int subtaskSize = trainingData.size() / numSubtasks;
-    int remainder = trainingData.size() % numSubtasks;
+    int subtaskSize = trainingFiles.size() / numSubtasks;
+    int remainder = trainingFiles.size() % numSubtasks;
 
     string leaderUuid = queuedTask.getLeaderUuid();
     AddressTable assignedWorkers = queuedTask.getAssignedWorkers();
@@ -82,7 +79,7 @@ void Requester::divideTask() {
     // create subvectors of requesttasks
     vector<TaskRequest> subtasks;
     for (int i = 0; i < numSubtasks; i++) {
-        vector<int> subtaskData;
+        vector<string> subtaskTrainingFiles;
         int currentSubtaskSize = subtaskSize;
 
         if (i == numSubtasks - 1) {
@@ -90,22 +87,15 @@ void Requester::divideTask() {
         }
 
         for (int j = 0; j < currentSubtaskSize; j++) {
-            subtaskData.push_back(trainingData[i * subtaskSize + j]);
+            subtaskTrainingFiles.push_back(trainingFiles[i * subtaskSize + j]);
         }
 
         // Build a path by combining the filename and DATA_DIR using path joins
-        string filename = "subtaskData_" + std::to_string(i) + ".txt";
-        TaskRequest subtaskRequest(1, subtaskData, filename);
-        /*
-         * We use FTP to send the training data. This is necessary if the
-         * training data is large or cannot be easily serialized into an in
-         * memory object (i.e. vector).
-         *
-         * In this simple case, we create a temporary file to hold the training
-         * data and demonstrate using FTP.
-         */
-        cout << "FTP: Created file " << subtaskRequest.getTrainingFile()
-             << endl;
+        string filename = "subtaskIndex_" + std::to_string(i) + ".txt";
+        TaskRequest subtaskRequest(1, filename, TaskRequest::INDEX_FILENAME);
+        subtaskRequest.writeToTrainingDataIndexFile(subtaskTrainingFiles);
+        cout << "FTP: Created index file "
+             << subtaskRequest.getTrainingDataIndexFilename() << endl;
         subtaskRequest.setLeaderUuid(leaderUuid);
         subtaskRequest.setAssignedWorkers(assignedWorkers);
         taskRequests.push_back(subtaskRequest);
