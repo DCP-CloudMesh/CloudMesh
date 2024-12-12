@@ -1,9 +1,11 @@
 #include "../../include/IPC/zmq_receiver.h"
 
-ZMQReceiver::ZMQReceiver(unsigned int port)
-    : port(port), context(1), socket(context, zmq::socket_type::rep) {
+ZMQReceiver::ZMQReceiver()
+    : context(1), socket(context, zmq::socket_type::rep) {
+    port = get_available_port();
     const std::string address = "tcp://*:" + std::to_string(port);
     socket.bind(address);
+    std::cout << "ZMQReceiver address: " << address << std::endl;
 }
 
 std::string ZMQReceiver::receive() {

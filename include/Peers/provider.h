@@ -22,7 +22,7 @@ class Provider : public Peer {
     ZMQReceiver zmq_receiver;
 
   public:
-    Provider(const char* port, std::string uuid, const char* zmq_port);
+    Provider(const char* port, std::string uuid);
     ~Provider() noexcept;
 
     void registerWithBootstrap();

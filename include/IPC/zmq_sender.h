@@ -3,6 +3,7 @@
 
 #include <string>
 #include <zmq.hpp>
+#include "../utility.h"
 
 class ZMQSender {
     unsigned int port;
@@ -10,8 +11,7 @@ class ZMQSender {
     zmq::socket_t socket;
 
   public:
-    ZMQSender() = delete;
-    ZMQSender(unsigned int port);
+    ZMQSender();
     void send(const std::string& message);
 };
 

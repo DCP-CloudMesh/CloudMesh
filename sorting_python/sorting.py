@@ -1,9 +1,8 @@
 import zmq
 
 # Set up the context and responder socket
-base_port = int(input("Enter the base port number: "))
-port_rec = base_port
-port_send = base_port + 1
+port_rec = int(input("Enter the ZMQ sender port number: "))
+port_send = int(input("Enter the ZMQ receiver port number: "))
 
 context = zmq.Context()
 responder = context.socket(zmq.REP)
