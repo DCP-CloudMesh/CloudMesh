@@ -80,10 +80,9 @@ To execute, run the following commands:
 
 ### Provider
 ```
-./bazel-bin/provider [8080] [5555]
+./bazel-bin/provider [8080]
 ``` 
 (8080 is the default port, optional parameter)
-`5555` is the default ZeroMQ port. We need to change this for different providers with a gap of 2: 5555, 5557, 5559, ....
 
 ### Requester
 
