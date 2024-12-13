@@ -94,6 +94,13 @@ To execute, run the following commands:
 `r` is an optional parameter to request to receive the result of the computation (use same port as original request execution)
 `c` is an optional parameter to request to provide the computation
 
+
+### Resources
+
+The peers assume data is located in the directory specified by
+the `DATA_DIR` parameter in `utility.h`. All filenames and globbing 
+options are taken w.r.t the `DATA_DIR` parameter.
+
 ## Tests
 A few unit tests are available. They can be run with
 ```bash
