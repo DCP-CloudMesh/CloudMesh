@@ -26,3 +26,6 @@ bazel-CloudMesh
 data/*
 third_party/cppzmq*
 third_party/libzmq*
+
+# ml dependencies
+*.pyc
