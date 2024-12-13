@@ -14,8 +14,8 @@
 
 using namespace std;
 
-Provider::Provider(const char* port, string uuid, const char* zmq_port)
-    : Peer(uuid), zmq_sender(stoi(zmq_port)), zmq_receiver(stoi(zmq_port) + 1) {
+Provider::Provider(const char* port, string uuid)
+    : Peer(uuid), zmq_sender(), zmq_receiver() {
     isBusy = false;
     isLocalBootstrap = false;
 

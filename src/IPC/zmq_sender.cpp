@@ -1,9 +1,10 @@
 #include "../../include/IPC/zmq_sender.h"
 
-ZMQSender::ZMQSender(unsigned int port)
-    : port(port), context(1), socket(context, zmq::socket_type::req) {
+ZMQSender::ZMQSender() : context(1), socket(context, zmq::socket_type::req) {
+    port = get_available_port();
     const std::string address = "tcp://localhost:" + std::to_string(port);
     socket.connect(address);
+    std::cout << "ZMQSender address: " << address << std::endl;
 }
 
 void ZMQSender::send(const std::string& message) {

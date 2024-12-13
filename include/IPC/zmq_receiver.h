@@ -1,6 +1,7 @@
 #ifndef _ZMQ_RECEIVER_H_
 #define _ZMQ_RECEIVER_H_
 
+#include "../utility.h"
 #include <string>
 #include <zmq.hpp>
 
@@ -10,8 +11,7 @@ class ZMQReceiver {
     zmq::socket_t socket;
 
   public:
-    ZMQReceiver() = delete;
-    ZMQReceiver(unsigned int port);
+    ZMQReceiver();
     std::string receive();
 };
 

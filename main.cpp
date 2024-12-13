@@ -10,15 +10,11 @@ using namespace std;
 // comment testing
 
 int main(int argc, char* argv[]) {
-    const char *port = "8080", *zmq_port = "5555";
+    const char *port = "8080";
     string uuid = uuid::generate_uuid_v4();
 
     if (argc >= 2) {
         port = argv[1];
-    }
-
-    if (argc >= 3) {
-        zmq_port = argv[2];
     }
 
 #if defined(BOOTSTRAP)
@@ -27,13 +23,13 @@ int main(int argc, char* argv[]) {
     b.listen();
 #elif defined(PROVIDER)
     cout << "Running as provider on port " << port << "." << endl;
-    Provider p = Provider(port, uuid, zmq_port);
+    Provider p = Provider(port, uuid);
     p.registerWithBootstrap();
     p.listen();
 #elif defined(REQUESTER)
     cout << "Running as requester." << endl;
     Requester r = Requester(port);
-    int numRequestedWorkers = 3;
+    int numRequestedWorkers = 2;
 
     string requestType = "c";
     if (argc >= 3) {
