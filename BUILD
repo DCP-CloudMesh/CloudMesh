@@ -73,3 +73,15 @@ cc_binary(
     defines = ["REQUESTER=1"] + local_defines,                    
     deps = [":src_files"],
 )
+
+################################# tests BUILD target #################################
+
+cc_test(
+    name = "utility_test",
+    srcs = ["tests/test_utility.cpp"],
+    deps = [
+        ":src_files",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

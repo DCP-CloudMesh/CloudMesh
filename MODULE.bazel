@@ -14,3 +14,4 @@ local_repository(
 )
 
 bazel_dep(name = "protobuf", version = "29.0-rc1")
+bazel_dep(name = "googletest", version = "1.15.2")

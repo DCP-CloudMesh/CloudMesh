@@ -93,6 +93,12 @@ To execute, run the following commands:
 `r` is an optional parameter to request to receive the result of the computation (use same port as original request execution)
 `c` is an optional parameter to request to provide the computation
 
+## Tests
+A few unit tests are available. They can be run with
+```bash
+bazel test //:utility_test
+```
+
 ## Clean
 
 ## To clean the build files:
