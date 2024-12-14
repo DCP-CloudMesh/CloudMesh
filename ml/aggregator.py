@@ -12,25 +12,6 @@ from networks import SimpleCNN
 from dataloader import CIFAR10Dataset, get_data_loaders
 from utils import train, val, test
 
-"""
-def average_state_dicts(self):
-        # print([type(i) for i in self.state_dicts])
-        if self.avg_check:
-            for state_dict in self.state_dicts:
-                if state_dict is None:
-                    return None
-            self.avg_check = False
-        avg_state_dict = {}
-        for key in self.state_dicts[0]:
-            tensors = [
-                state_dict[key].float()
-                for state_dict in self.state_dicts
-                if key in state_dict.keys()
-            ]
-            avg_state_dict[key] = torch.stack(tensors).mean(dim=0)
-        return avg_state_dict
-"""
-
 
 def nn_aggregator(state_dicts):
     """
