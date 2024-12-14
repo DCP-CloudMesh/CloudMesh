@@ -24,6 +24,7 @@ MODULE.bazel.lock
 bazel-CloudMesh
 
 data/*
+subtaskIndex_*.txt
 third_party/cppzmq*
 third_party/libzmq*
 

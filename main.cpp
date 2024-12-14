@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     if (requestType == "c") {
         TaskRequest request =
-            TaskRequest(numRequestedWorkers, ".*subtaskData_.*\\.txt$",
+            TaskRequest(numRequestedWorkers, ".*\\.jpg$",
                         TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers

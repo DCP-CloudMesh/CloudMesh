@@ -5,6 +5,7 @@
 #include "../../include/RequestResponse/registration.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/utility.h"
+#include "proto/payload.pb.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -171,7 +172,8 @@ void Provider::followerHandleTaskRequest() {
     }
 }
 
-vector<int> Provider::ingestTrainingData() {
+string Provider::ingestTrainingData() {
+    string trainingDataIndexFile = taskRequest->getTrainingDataIndexFilename();
     vector<string> requiredTrainingFiles = taskRequest->getTrainingDataFiles();
     cout << "Task requires " << requiredTrainingFiles.size()
          << " training files" << endl;
@@ -184,45 +186,25 @@ vector<int> Provider::ingestTrainingData() {
     }
     cout << "All training files are now present" << endl;
 
-    // read content in the training data files
-    vector<int> data;
-    for (const string& filename : requiredTrainingFiles) {
-        ifstream file(resolveDataFile(filename));
-        if (!file.is_open()) {
-            cerr << "Error opening file: " << filename << endl;
-            exit(1);
-        }
-
-        string line;
-        while (getline(file, line)) {
-            data.push_back(stoi(line));
-        }
-        file.close();
-    }
-
-    return data;
+    // Temporarily just send index file to python worker
+    return trainingDataIndexFile;
 }
 
 void Provider::processWorkload() {
-    vector<int> data = ingestTrainingData();
+    string indexFile = ingestTrainingData();
 
-    // turn the vector into a string
-    string dataStr = "";
-    for (int i = 0; i < data.size(); i++) {
-        dataStr += to_string(data[i]);
-        if (i != data.size() - 1) {
-            dataStr += ",";
-        }
-    }
-
-    // send data to the worker
-    cout << "Unprocessed workload with data: " << dataStr << endl;
-    zmq_sender.send(dataStr);
+    // send training data index file to the worker
+    cout << "Working on training data index file: " << indexFile << endl;
+    payload::TrainingData proto;
+    proto.set_training_data_index_filename(indexFile);
+    string serialized;
+    proto.SerializeToString(&serialized);
+    zmq_sender.send(serialized);
     cout << "Waiting for processed data..." << endl;
     auto rcvdData = zmq_receiver.receive();
 
     // turn the string back into a vector
-    data.clear();
+    vector<int> data;
     string num = "";
     for (int i = 0; i < rcvdData.size(); i++) {
         if (rcvdData[i] == ',') {
