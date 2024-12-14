@@ -13,29 +13,27 @@ from dataloader import CIFAR10Dataset, get_data_loaders
 from utils import train, val, test
 
 
-# Set up the context and responder socket
-port_send = int(input("Enter the ZMQ sender port number: "))
-port_rec = int(input("Enter the ZMQ receiver port number: "))
-
-context = zmq.Context()
-responder = context.socket(zmq.REP)
-responder.setsockopt(zmq.LINGER, 0)
-responder.bind("tcp://*:" + str(port_rec))
-
-sender = context.socket(zmq.REQ)
-sender.setsockopt(zmq.LINGER, 0)
-sender.connect("tcp://localhost:" + str(port_send))
-
-# Hyperparameters (can use CLI)
-batch_size = 64
-learning_rate = 0.001
-epochs = 1  # for now
-
-device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-print(f"Using device: {device}")
-
-
 def main():
+    # Set up the context and responder socket
+    port_send = int(input("Enter the ZMQ sender port number: "))
+    port_rec = int(input("Enter the ZMQ receiver port number: "))
+
+    context = zmq.Context()
+    responder = context.socket(zmq.REP)
+    responder.setsockopt(zmq.LINGER, 0)
+    responder.bind("tcp://*:" + str(port_rec))
+
+    sender = context.socket(zmq.REQ)
+    sender.setsockopt(zmq.LINGER, 0)
+    sender.connect("tcp://localhost:" + str(port_send))
+
+    # Hyperparameters (can use CLI)
+    batch_size = 64
+    learning_rate = 0.001
+    epochs = 1  # for now
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    print(f"Using device: {device}")
+
     # recieve a payload with the data_file_names
     payload = responder.recv_string()
     responder.send_string("")
@@ -90,7 +88,7 @@ def main():
 
     # Save the model checkpoint
     # torch.save(model.state_dict(), f"{data_path}output/model.pth")
-    print("Finished Training. Model saved as model.pth.")
+    # print("Finished Training. Model saved as model.pth.")
 
     end_time = time.time()
     print("Total Time: ", end_time - start_time)
