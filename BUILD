@@ -62,9 +62,8 @@ cc_binary(
     name = "provider",
     srcs = ["main.cpp"],
     defines = ["PROVIDER=1"] + local_defines,                    
-    deps = [
-        ":src_files",
-    ],
+    deps = [":src_files"],
+    data = ["sorting_python/sorting.py"]
 )
 
 cc_binary(
@@ -72,6 +71,11 @@ cc_binary(
     srcs = ["main.cpp"],
     defines = ["REQUESTER=1"] + local_defines,                    
     deps = [":src_files"],
+)
+
+py_binary(
+    name = "sorting",
+    srcs = ["sorting_python/sorting.py"],
 )
 
 ################################# tests BUILD target #################################

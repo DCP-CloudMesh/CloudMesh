@@ -13,6 +13,7 @@ class ZMQSender {
   public:
     ZMQSender();
     void send(const std::string& message);
+    unsigned int getPort() const;
 };
 
 #endif // _ZMQ_SENDER_H_
