@@ -30,3 +30,4 @@ third_party/libzmq*
 
 # ml dependencies
 *.pyc
+CIFAR10/*.txt
