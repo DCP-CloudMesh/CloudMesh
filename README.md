@@ -52,7 +52,7 @@ To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following comm
 ```
 bazel build //... --experimental_google_legacy_api --config=macos
 ```
-### Windows
+### Linux
 ```
 bazel build //... --experimental_google_legacy_api
 ```
@@ -64,7 +64,7 @@ To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER** locally, run the follow
 ```
 bazel build //... --define local=true --experimental_google_legacy_api --config=macos
 ```
-### Windows
+### Linux
 ```
 bazel build //... --define local=true --experimental_google_legacy_api
 ```
