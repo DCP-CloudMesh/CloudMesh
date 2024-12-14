@@ -81,11 +81,13 @@ void Provider::listen() {
 
         try {
             // Spin up python script child process
+            const char* python_env = std::getenv("PYTHON_INTERPRETER");
+            std::string python_interpreter = python_env ? python_env : "/usr/bin/python3";
             std::string script_path = "sorting_python/sorting.py";
             std::vector<std::string> args{
                 std::to_string(zmq_sender.getPort()),
                 std::to_string(zmq_receiver.getPort())};
-            boost::process::child python_script("/usr/bin/env", "python3", script_path, args);
+            boost::process::child python_script(python_interpreter, script_path, args);
 
             // Process P2P communication
             if (task->getLeaderUuid() == uuid) {
