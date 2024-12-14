@@ -2,7 +2,6 @@
 
 cc_import(
     name = "libzmq",
-    shared_library = "libzmq/build/lib/libzmq.dylib",
     static_library = "libzmq/build/lib/libzmq.a",
     includes = ["libzmq/include"], 
     visibility = ["//visibility:public"],
