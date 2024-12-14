@@ -13,6 +13,7 @@ class ZMQReceiver {
   public:
     ZMQReceiver();
     std::string receive();
+    unsigned int getPort() const;
 };
 
 #endif // _ZMQ_RECEIVER_H_

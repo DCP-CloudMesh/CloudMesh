@@ -7,6 +7,7 @@
 #include "../../include/utility.h"
 
 #include <algorithm>
+#include <boost/process.hpp>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -78,10 +79,32 @@ void Provider::listen() {
             server->closeConn();
         }
 
-        if (task->getLeaderUuid() == uuid) {
-            leaderHandleTaskRequest(requesterIpAddr);
-        } else {
-            followerHandleTaskRequest();
+        try {
+            // Spin up python script child process
+            const char* python_env = std::getenv("PYTHON_INTERPRETER");
+            std::string python_interpreter = python_env ? python_env : "/usr/bin/python3";
+            std::string script_path = "sorting_python/sorting.py";
+            std::vector<std::string> args{
+                std::to_string(zmq_sender.getPort()),
+                std::to_string(zmq_receiver.getPort())};
+            boost::process::child python_script(python_interpreter, script_path, args);
+
+            // Process P2P communication
+            if (task->getLeaderUuid() == uuid) {
+                leaderHandleTaskRequest(requesterIpAddr);
+            } else {
+                followerHandleTaskRequest();
+            }
+
+            // Wait for python script to terminate
+            python_script.wait();
+
+            int exit_code = python_script.exit_code();
+            if (exit_code != 0) {
+                std::cout << "Error: Python child process exited with code: " << exit_code << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Exception: " << e.what() << std::endl;
         }
     }
 }

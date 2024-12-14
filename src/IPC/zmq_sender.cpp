@@ -15,3 +15,7 @@ void ZMQSender::send(const std::string& message) {
     zmq::message_t reply;
     socket.recv(reply, zmq::recv_flags::none);
 }
+
+unsigned int ZMQSender::getPort() const {
+    return port;
+}

@@ -19,3 +19,7 @@ std::string ZMQReceiver::receive() {
 
     return zmq_msg.to_string();
 }
+
+unsigned int ZMQReceiver::getPort() const {
+    return port;
+}
