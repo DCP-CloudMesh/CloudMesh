@@ -39,9 +39,7 @@ def main():
     # recieve a payload with the data_file_names
     payload = responder.recv_string()
     responder.send_string("")
-
-    data_file_names = payload
-
+    data_file_names = str(payload)
     start_time = time.time()
 
     # Define transforms
@@ -54,7 +52,6 @@ def main():
 
     # Create the datasets
     data_path = "CIFAR10/"
-    data_file_names = "train_first.txt"
     with open(os.path.join(data_path, data_file_names)) as f:
         data_file_names = f.read().splitlines()
     if not os.path.exists(os.path.join(data_path, "output")):
@@ -62,6 +59,7 @@ def main():
     train_dataset = CIFAR10Dataset(
         os.path.join(data_path, "train"), data_file_names, transform=transform
     )
+    print("train_dataset length: ", len(train_dataset))
 
     data_file_names = "test.txt"
     with open(os.path.join(data_path, data_file_names)) as f:
