@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 /*
  * Defines the data location of training files.
  */
-const std::string DATA_DIR = "data";
+const std::string DATA_DIR = "CIFAR10/train";
 
 struct IpAddress {
     std::string host;

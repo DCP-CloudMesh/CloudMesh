@@ -32,7 +32,7 @@ class Provider : public Peer {
     void followerHandleTaskRequest();
     void processData();
     void processWorkload(); // worker function to manipulate the TaskRequest
-    std::vector<int>
+    std::string
     ingestTrainingData(); // worker function to load training data into memory
     TaskResponse aggregateResults(std::vector<std::vector<int>> followerData);
 };
