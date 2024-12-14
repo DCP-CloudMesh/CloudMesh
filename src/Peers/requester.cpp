@@ -7,6 +7,9 @@
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/utility.h"
 
+#include <algorithm>
+#include <random>
+
 using namespace std;
 
 Requester::Requester(const char* port) : Peer() {
@@ -67,6 +70,11 @@ void Requester::divideTask() {
     // obtain list of training files
     vector<string> trainingFiles = queuedTask.getTrainingDataFiles();
     cout << "Found " << trainingFiles.size() << " training files" << endl;
+
+    // shuffle training files for even distribution after division
+    std::random_device rd; // Seed generator
+    std::mt19937 g(rd());  // Mersenne Twister engine
+    std::shuffle(trainingFiles.begin(), trainingFiles.end(), g);
 
     // divide the vector into subvectors
     int numSubtasks = queuedTask.getNumWorkers();
