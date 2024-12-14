@@ -3,21 +3,19 @@
 using namespace std;
 
 TaskResponse::TaskResponse() : Payload(Type::TASK_RESPONSE) {}
-TaskResponse::TaskResponse(const vector<int>& trainingData)
-    : Payload(Type::TASK_RESPONSE), trainingData{trainingData} {}
 
-vector<int> TaskResponse::getTrainingData() const { return trainingData; }
+TaskResponse::TaskResponse(const string& modelStateDict)
+    : Payload(Type::TASK_RESPONSE), modelStateDict{modelStateDict} {}
 
-void TaskResponse::setTrainingData(const vector<int>& trainingData) {
-    this->trainingData = trainingData;
+string TaskResponse::getTrainingData() const { return modelStateDict; }
+
+void TaskResponse::setTrainingData(const string& modelStateDict) {
+    this->modelStateDict = modelStateDict;
 }
 
 google::protobuf::Message* TaskResponse::serializeToProto() const {
     payload::TaskResponse* proto = new payload::TaskResponse();
-
-    for (const auto& value : trainingData) {
-        proto->add_trainingdata(value);
-    }
+    proto->set_modelstatedict(modelStateDict);
 
     return proto;
 }
@@ -28,8 +26,5 @@ void TaskResponse::deserializeFromProto(
     const payload::TaskResponse& proto =
         dynamic_cast<const payload::TaskResponse&>(protoMessage);
 
-    trainingData.clear();
-    for (const auto& value : proto.trainingdata()) {
-        trainingData.push_back(value);
-    }
+    modelStateDict = proto.modelstatedict();
 }

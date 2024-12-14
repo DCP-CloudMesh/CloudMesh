@@ -42,7 +42,10 @@ void TaskRequest::writeToTrainingDataIndexFile(
 
     ofstream indexFile(indexFilePath);
     if (indexFile.is_open()) {
+        cout << "trainingDataFiles.size(): " << trainingDataFiles.size()
+             << endl;
         for (const string& filename : trainingDataFiles) {
+            // cout << filename << " ";
             indexFile << filename << endl;
         }
         indexFile.close();
