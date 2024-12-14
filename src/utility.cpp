@@ -259,7 +259,7 @@ vector<string> getMatchingDataFiles(const regex& pattern,
     vector<string> matchingDataFiles;
     for (const auto& entry :
          filesystem::recursive_directory_iterator(directory)) {
-        cout << "Checking file: " << entry.path() << endl;
+        // cout << "Checking file: " << entry.path() << endl;
         if (entry.is_regular_file()) {
             const string filename = entry.path().filename().string();
             if (regex_match(filename, pattern)) {

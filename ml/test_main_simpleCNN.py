@@ -15,8 +15,8 @@ from utils import train, val, test
 
 def main():
     # Set up the context and responder socket
-    port_send = int(input("Enter the ZMQ sender port number: "))
-    port_rec = port_send + 1
+    port_rec = int(input("Enter the ZMQ sender port number: "))
+    port_send = int(input("Enter the ZMQ receiver port number: "))
 
     context = zmq.Context()
     responder = context.socket(zmq.REP)
@@ -31,7 +31,8 @@ def main():
     batch_size = 64
     learning_rate = 0.001
     epochs = 1  # for now
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = torch.device(
+        "mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
 
     # recieve a payload with the data_file_names

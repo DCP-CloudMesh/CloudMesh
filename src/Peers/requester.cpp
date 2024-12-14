@@ -71,15 +71,19 @@ void Requester::divideTask() {
     vector<string> trainingFiles = queuedTask.getTrainingDataFiles();
     cout << "Found " << trainingFiles.size() << " training files" << endl;
 
-    // shuffle training files for even distribution after division
-    std::random_device rd; // Seed generator
-    std::mt19937 g(rd());  // Mersenne Twister engine
-    std::shuffle(trainingFiles.begin(), trainingFiles.end(), g);
+    // // shuffle training files for even distribution after division
+    // std::random_device rd; // Seed generator
+    // std::mt19937 g(rd());  // Mersenne Twister engine
+    // std::shuffle(trainingFiles.begin(), trainingFiles.end(), g);
 
     // divide the vector into subvectors
     int numSubtasks = queuedTask.getNumWorkers();
     int subtaskSize = trainingFiles.size() / numSubtasks;
     int remainder = trainingFiles.size() % numSubtasks;
+
+    cout << "Dividing task into " << numSubtasks << " subtasks" << endl;
+    cout << "Subtask size: " << subtaskSize << endl;
+    cout << "Remainder: " << remainder << endl;
 
     string leaderUuid = queuedTask.getLeaderUuid();
     AddressTable assignedWorkers = queuedTask.getAssignedWorkers();

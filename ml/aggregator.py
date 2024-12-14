@@ -35,8 +35,8 @@ def nn_aggregator(state_dicts):
 
 def main():
     # Set up the context and responder socket
-    port_send = int(input("Enter the ZMQ sender port number: "))
-    port_rec = port_send + 1
+    port_rec = int(input("Enter the ZMQ sender port number: "))
+    port_send = int(input("Enter the ZMQ reciever port number: "))
 
     context = zmq.Context()
     responder = context.socket(zmq.REP)
