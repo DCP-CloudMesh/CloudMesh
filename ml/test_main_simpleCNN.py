@@ -16,7 +16,7 @@ from utils import train, val, test
 def main():
     # Set up the context and responder socket
     port_send = int(input("Enter the ZMQ sender port number: "))
-    port_rec = int(input("Enter the ZMQ receiver port number: "))
+    port_rec = port_send + 1
 
     context = zmq.Context()
     responder = context.socket(zmq.REP)
