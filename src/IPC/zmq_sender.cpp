@@ -13,6 +13,6 @@ void ZMQSender::send(const std::string& message) {
     memcpy(zmq_msg.data(), message.data(), message.size());
     socket.send(zmq_msg, zmq::send_flags::none);
 
-    zmq::message_t reply;
-    socket.recv(reply, zmq::recv_flags::none);
+    // zmq::message_t reply;
+    // socket.recv(reply, zmq::recv_flags::none);
 }
