@@ -79,7 +79,9 @@ void Provider::listen() {
         // Download and parse training data index file from requester
         cout << "FTP: requesting index: "
              << taskRequest->getTrainingDataIndexFilename() << endl;
-        server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
+
+        // bug here where we are saving the file to the same file
+        // server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
 
         server->closeConn();
 
@@ -115,6 +117,7 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
             static_pointer_cast<TaskResponse>(followerPayload);
 
         // append to followerData
+        cout << "task response: " << taskResp->getTrainingData() << endl;
         followerData.push_back(taskResp->getTrainingData());
         server->replyToConn("Received follower result.");
         server->closeConn();
@@ -205,6 +208,7 @@ void Provider::processWorkload() {
     proto.set_training_data_index_filename(indexFile);
     string serialized;
     proto.SerializeToString(&serialized);
+    cout << "Sending training data index file to worker..." << endl;
     ml_zmq_sender.send(serialized);
     cout << "Waiting for processed data..." << endl;
     auto rcvdData = ml_zmq_receiver.receive();
@@ -216,16 +220,21 @@ void Provider::processWorkload() {
 }
 
 TaskResponse Provider::aggregateResults(vector<string> followerData) {
+    cout << "Aggregating results..." << endl;
+
     // append leader's data to followerData
     string curr_data = taskResponse->getTrainingData();
     followerData.push_back(curr_data);
 
     // send each follower's data to the aggregator
+    cout << "Sending data to aggregator..." << endl;
     for (int i = 0; i < followerData.size(); i++) {
-        payload::AggregatorInputData proto;
-        proto.set_modelstatedict(followerData[i]);
+        cout << "Aggregator for loop: " << i << endl;
+        payload::AggregatorInputData* proto =
+            new payload::AggregatorInputData();
+        proto->set_modelstatedict(followerData[i]);
         string serialized;
-        proto.SerializeToString(&serialized);
+        proto->SerializeToString(&serialized);
         aggregator_zmq_sender.send(serialized);
     }
 

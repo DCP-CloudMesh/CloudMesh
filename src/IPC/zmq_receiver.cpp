@@ -14,9 +14,9 @@ std::string ZMQReceiver::receive() {
     socket.recv(zmq_msg, zmq::recv_flags::none);
 
     // response
-    zmq::message_t reply(zmq_msg.size());
-    memcpy(reply.data(), zmq_msg.data(), zmq_msg.size());
-    socket.send(reply, zmq::send_flags::none);
+    // zmq::message_t reply(zmq_msg.size());
+    // memcpy(reply.data(), zmq_msg.data(), zmq_msg.size());
+    // socket.send(reply, zmq::send_flags::none);
 
     return zmq_msg.to_string();
 }

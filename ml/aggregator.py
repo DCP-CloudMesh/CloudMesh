@@ -12,6 +12,8 @@ from networks import SimpleCNN
 from dataloader import CIFAR10Dataset, get_data_loaders
 from utils import train, val, test
 
+from proto import payload_pb2, utility_pb2
+
 
 def nn_aggregator(state_dicts):
     """
@@ -37,6 +39,7 @@ def main():
     # Set up the context and responder socket
     port_rec = int(input("Enter the ZMQ sender port number: "))
     port_send = int(input("Enter the ZMQ reciever port number: "))
+    num_peers = int(input("Enter the number of peers: "))
 
     context = zmq.Context()
     responder = context.socket(zmq.REP)
@@ -48,14 +51,17 @@ def main():
     sender.connect("tcp://localhost:" + str(port_send))
 
     # recieve the models from fake_peer.py
+    print("Waiting for models...")
     state_dicts = []
-    for i in range(3):
+    for i in range(num_peers):
         sd = responder.recv()
-        sd = pickle.loads(sd)
-        state_dicts.append(sd)
-        responder.send_string("ACK")
+        agg_inp = payload_pb2.AggregatorInputData()
+        agg_inp.ParseFromString(sd)
+        agg_inp = pickle.loads(agg_inp.modelStateDict)
+        state_dicts.append(agg_inp)
 
     # average the models
+    print("Averaging models...")
     avg_state_dict = nn_aggregator(state_dicts)
 
     # send the averaged model back to fake_peer.py
@@ -63,8 +69,10 @@ def main():
     avg_model.load_state_dict(avg_state_dict)
     avg_model = pickle.dumps(avg_model)
 
-    sender.send(avg_model)
-    _ = sender.recv_string()
+    print("Sending averaged model...")
+    tr = payload_pb2.AggregatorInputData()
+    tr.modelStateDict = avg_model
+    sender.send(tr.SerializeToString())
 
     print("Model averaging complete.")
     return

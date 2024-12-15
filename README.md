@@ -140,3 +140,6 @@ To include the dependency build files in VSCode, add the following to the includ
   "${workspaceFolder}/bazel-PeerToPeer/external/{your_target_directory}"
 ]
 ```
+
+
+protoc --python_out=ml proto/payload.proto  

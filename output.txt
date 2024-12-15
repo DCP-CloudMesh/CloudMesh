@@ -1,0 +1,31 @@
+Running as requester.
+Initializing server on 127.0.0.1:8083
+Server initialized
+Insufficient number of connected provider peers
+Sending out discovery request...
+Connecting to bootstrap node at 127.0.0.1:8080
+Connection successful.
+FTP Server Received: Bootstrap Node (06642c10-949b-497c-b1e4-67f9d1633b76) - received discovery request
+Waiting for discovery response...
+Client connected
+Deserializing message with id: 18b7d6f2-7489-4924-b89c-b121367e247e from 06642c10-949b-497c-b1e4-67f9d1633b76 at 127.0.0.1:8080
+Received 2 peers in discovery response
+Found 50000 training files
+Dividing task into 2 subtasks
+Subtask size: 25000
+Remainder: 0
+FTP: Created index file subtaskIndex_0.txt
+FTP: Created index file subtaskIndex_1.txt
+Connection successful.
+FTP Server Received: get subtaskIndex_0.txt
+FTP: Filename given is: subtaskIndex_0.txt
+FTP: Data port is: 62118
+FTP: Creating FTP server socket 62118
+FTP: File upload done
+Connection successful.
+FTP Server Received: get subtaskIndex_1.txt
+FTP: Filename given is: subtaskIndex_1.txt
+FTP: Data port is: 65016
+FTP: Creating FTP server socket 65016
+FTP: File upload done
+Sent task request.
