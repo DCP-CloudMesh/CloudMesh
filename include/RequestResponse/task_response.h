@@ -8,14 +8,15 @@
 #include "payload.h"
 
 class TaskResponse : public Payload {
-    std::vector<int> trainingData;
+    // bytes representing the training data
+    std::string modelStateDict;
 
   public:
     TaskResponse();
-    TaskResponse(const std::vector<int>& trainingData);
+    TaskResponse(const std::string& modelStateDict);
 
-    std::vector<int> getTrainingData() const;
-    void setTrainingData(const std::vector<int>& trainingData);
+    std::string getTrainingData() const;
+    void setTrainingData(const std::string& modelStateDict);
 
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(

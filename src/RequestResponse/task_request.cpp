@@ -40,12 +40,38 @@ void TaskRequest::writeToTrainingDataIndexFile(
     const vector<string>& trainingDataFiles) const {
     fs::path indexFilePath = resolveDataFile(trainingDataIndexFilename);
 
-    ofstream indexFile(indexFilePath);
-    if (indexFile.is_open()) {
+    ofstream indexFile(indexFilePath, std::ios::out | std::ios::trunc);
+    if (!indexFile) {
+        // Throw an exception or handle the error appropriately
+        cerr << "Failed to open index file: " << indexFilePath << endl;
+        throw runtime_error("Could not open training data index file");
+    }
+
+    try {
         for (const string& filename : trainingDataFiles) {
             indexFile << filename << endl;
+
+            // Check for write errors after each write
+            if (!indexFile) {
+                cerr << "Error writing to index file for filename: " << filename
+                     << endl;
+                throw runtime_error("Write error in training data index file");
+            }
         }
+
+        // Explicitly flush to ensure all data is written
+        indexFile.flush();
+    } catch (const exception& e) {
+        cerr << "Exception during index file writing: " << e.what() << endl;
         indexFile.close();
+        throw; // Re-throw to allow caller to handle
+    }
+
+    indexFile.close();
+
+    // Additional check after closing
+    if (indexFile.bad()) {
+        cerr << "Possible data corruption during index file writing" << endl;
     }
 }
 

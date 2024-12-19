@@ -115,6 +115,10 @@ string Message::serialize() const {
 
         messageProto.set_allocated_taskresponse(taskRespProto);
 
+        string serialized;
+        messageProto.SerializeToString(&serialized);
+        cout << "Serialized task response" << serialized << endl;
+
         break;
     }
     default:
@@ -164,6 +168,7 @@ void Message::deserialize(const string& serializedData) {
                payload::PayloadType::TASK_RESPONSE) {
         const payload::TaskResponse& taskResponse =
             messageProto->taskresponse();
+        cout << "######## Deserializing task response" << endl;
         payload->deserializeFromProto(taskResponse);
     } else if (messageProto->payloadtype() ==
                payload::PayloadType::REGISTRATION) {
