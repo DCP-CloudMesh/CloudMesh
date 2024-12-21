@@ -66,14 +66,15 @@ std::string TaskRequest::getTrainingDataIndexFilename() const {
     return (taskRequestType == INDEX_FILENAME) ? trainingDataIndexFilename : "";
 }
 
-vector<string> TaskRequest::getTrainingDataFiles() const {
+vector<string> TaskRequest::getTrainingDataFiles(string dir) const {
     vector<string> trainingDataFiles;
 
     if (taskRequestType == GLOB_PATTERN) {
         regex pattern = convertToRegexPattern(globPattern);
-        trainingDataFiles = getMatchingDataFiles(pattern, DATA_DIR);
+        trainingDataFiles =
+            getMatchingDataFiles(pattern, dir);
     } else if (taskRequestType == INDEX_FILENAME) {
-        ifstream indexFile(resolveDataFile(trainingDataIndexFilename));
+        ifstream indexFile(resolveDataFileInDirectory(trainingDataIndexFilename, dir));
         if (indexFile.is_open()) {
             string line;
             while (getline(indexFile, line)) {

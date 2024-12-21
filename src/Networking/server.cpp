@@ -81,7 +81,7 @@ void Server::replyToConn(string message) {
     send(activeConn, reply, strlen(reply), 0);
 }
 
-void Server::getFileFTP(string filename) {
+void Server::getFileFTP(string filename, string directory) {
     std::string reply = "get " + filename;
     cout << "FTP: sending request \"" << reply << "\"" << endl;
     send(activeConn, reply.c_str(), strlen(reply.c_str()), 0);
@@ -96,7 +96,10 @@ void Server::getFileFTP(string filename) {
     datasock = FTP_create_socket_client(data_port, PORT);
     recv(activeConn, msg, FTP_BUFFER_SIZE, 0);
     if (strcmp("nxt", msg) == 0) {
-        if ((fp = fopen(resolveDataFile(filename).c_str(), "w")) == NULL)
+        if ((fp = fopen(
+                 resolveDataFileInDirectory(filename, TARGET_TRAINING_DATA_DIR)
+                     .c_str(),
+                 "w")) == NULL)
             cout << "FTP: Error in creating file" << endl;
         else {
             recv(activeConn, char_num_blks, FTP_BUFFER_SIZE, 0);
