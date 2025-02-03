@@ -107,6 +107,9 @@ void Provider::listen() {
         // Download and parse training data index file from requester
         cout << "FTP: requesting index: "
              << taskRequest->getTrainingDataIndexFilename() << endl;
+        // Note: index files are downloaded to TARGET_INDEX_DATA_DIR
+        server->getFileIntoDirFTP(taskRequest->getTrainingDataIndexFilename(),
+                           TARGET_INDEX_DATA_DIR);
 
         // bug here where we are saving the file to the same file
         // fix in PR. RN, this will not work if multiple machines.
@@ -315,14 +318,15 @@ void Provider::followerHandleTaskRequest() {
 
 void Provider::ingestTrainingData() {
     string trainingDataIndexFile = taskRequest->getTrainingDataIndexFilename();
-    vector<string> requiredTrainingFiles = taskRequest->getTrainingDataFiles();
+    vector<string> requiredTrainingFiles =
+        taskRequest->getTrainingDataFiles(TARGET_INDEX_DATA_DIR);
     cout << "Task requires " << requiredTrainingFiles.size()
          << " training files" << endl;
     // Ensure all required training data files are present
     for (const string& filename : requiredTrainingFiles) {
-        if (!isFileWithinDataDirectory(filename)) {
+        if (!isFileWithinDirectory(filename, TARGET_TRAINING_DATA_DIR)) {
             cout << "FTP: requesting " << filename << endl;
-            server->getFileFTP(filename);
+            server->getFileIntoDirFTP(filename, TARGET_TRAINING_DATA_DIR);
         }
     }
     cout << "All training files are now present" << endl;

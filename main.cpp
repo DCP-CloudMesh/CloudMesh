@@ -18,7 +18,6 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[]) {
     unsigned short port = DEFAULT_PORT;
-
     string uuid = uuid::generate_uuid_v4();
 
 #if defined(BOOTSTRAP)

@@ -33,6 +33,7 @@ class TaskRequest : public Payload {
     void setGlobPattern(const std::string& pattern);
     void setTrainingDataIndexFilename(const std::string& filename);
     void setNumEpochs(const unsigned int numEpochs);
+    // Write the index file(s) to SOURCE_TRAINING_DATA_DIR
     void writeToTrainingDataIndexFile(
         const std::vector<std::string>& trainingDataFiles) const;
 
@@ -43,8 +44,9 @@ class TaskRequest : public Payload {
     std::string getTrainingDataIndexFilename() const;
     unsigned int getNumEpochs() const;
 
-    // Retrieves all data files referenced in this task request
-    std::vector<std::string> getTrainingDataFiles() const;
+    // Retrieves all data files referenced in this task request. Uses a dir to
+    // target a directory.
+    std::vector<std::string> getTrainingDataFiles(std::string dir) const;
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(
         const google::protobuf::Message& protoMessage) override;

@@ -116,7 +116,7 @@ int Client::sendMsg(const string& data, int num_retries) {
         FILE* fp;
         cout << "FTP: Filename given is: " << filename << endl;
 
-        if (!isFileWithinDataDirectory(filename)) {
+        if (!isFileWithinDirectory(filename, SOURCE_TRAINING_DATA_DIR)) {
             cerr << "FTP: Requested file is not within the data directory"
                  << endl;
             send(CONN, "0", FTP_BUFFER_SIZE, 0);

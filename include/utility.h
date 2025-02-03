@@ -34,7 +34,17 @@ namespace fs = std::filesystem;
 /*
  * Defines the data location of training files.
  */
-const std::string DATA_DIR = "CIFAR10/train";
+const std::string SOURCE_TRAINING_DATA_DIR = "CIFAR10/train";
+
+/*
+ * Defines the data location of training files being used locally by a provider.
+ */
+const std::string TARGET_TRAINING_DATA_DIR = "data/CIFAR10";
+
+/*
+ * Defines the data index location of training files in a provider.
+ */
+const std::string TARGET_INDEX_DATA_DIR = "data/index";
 
 struct IpAddress {
     std::string host;
@@ -78,10 +88,17 @@ int FTP_accept_conn(int sock);
 fs::path resolveDataFile(const std::string filename);
 
 /*
- * Verifies if a file is present in the data directory. Accepts
- * a filename as input.
+ * Resolves the path of a file within a directory.
+ * Accepts a filename, directory and returns a relative path.
  */
-bool isFileWithinDataDirectory(const std::string& filename);
+fs::path resolveDataFileInDirectory(const std::string filename,
+                                    const std::string dir);
+
+/*
+ * Verifies if a file is present in a directory. Accepts
+ * a filename and directory as input.
+ */
+bool isFileWithinDirectory(const std::string& filename, const std::string dir);
 
 /*
  * Generates a random port number that is available for use between MIN_PORT and
