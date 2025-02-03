@@ -101,10 +101,10 @@ vector<string> TaskRequest::getTrainingDataFiles(string dir) const {
 
     if (taskRequestType == GLOB_PATTERN) {
         regex pattern = convertToRegexPattern(globPattern);
-        trainingDataFiles =
-            getMatchingDataFiles(pattern, dir);
+        trainingDataFiles = getMatchingDataFiles(pattern, dir);
     } else if (taskRequestType == INDEX_FILENAME) {
-        ifstream indexFile(resolveDataFileInDirectory(trainingDataIndexFilename, dir));
+        ifstream indexFile(
+            resolveDataFileInDirectory(trainingDataIndexFilename, dir));
         if (indexFile.is_open()) {
             string line;
             while (getline(indexFile, line)) {

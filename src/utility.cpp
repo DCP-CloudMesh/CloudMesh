@@ -168,8 +168,9 @@ int FTP_accept_conn(int sock) {
     return (dataconnfd);
 }
 
-fs::path resolveDataFile(const std::string filename){
-    return resolveDataFileInDirectory(filename, SOURCE_TRAINING_DATA_DIR)}
+fs::path resolveDataFile(const std::string filename) {
+    return resolveDataFileInDirectory(filename, SOURCE_TRAINING_DATA_DIR);
+}
 
 fs::path resolveDataFileInDirectory(const std::string filename,
                                     const std::string dir) {
