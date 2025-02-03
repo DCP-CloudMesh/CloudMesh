@@ -24,8 +24,10 @@ class Server {
     bool acceptConn();                     // blocking
     std::string receiveFromConn();         // process the active conn
     void replyToConn(std::string message); // process the active conn
-    void getFileFTP(std::string filename); // retrieve remote file
-    void closeConn();                      // close the active conn
+    void
+    getFileIntoDirFTP(std::string filename,
+               std::string directory); // retrieve remote file into directory
+    void closeConn();                  // close the active conn
 };
 
 #endif // _SERVER_H
