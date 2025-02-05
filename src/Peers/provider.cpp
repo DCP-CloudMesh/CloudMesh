@@ -129,36 +129,37 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 
     // Send results back to requester
     // TODO: requester IP address could change
-    shared_ptr<TaskResponse> aggregatePayload =
-        make_shared<TaskResponse>(aggregatedResults);
+    // shared_ptr<TaskResponse> aggregatePayload =
+    //     make_shared<TaskResponse>(aggregatedResults);
+    shared_ptr<Acknowledgement> aggregatePayload = make_shared<Acknowledgement>();
     Message aggregateResultMsg(uuid, IpAddress(host, port), aggregatePayload);
 
-    cout << "Waiting for connection back to requester" << endl;
-    // Keep trying to send results back to requester
+
+    // busy wait until connection is established
+    const int retry = 5;
+    while (client->setupConn(requesterIpAddr, "tcp") != 0) {
+        cout << "Failed to connect to requester server, trying again in " << retry << "s" << endl;
+        sleep(retry);
+    }
+    cout << "Connected to requester server" << endl;
+
+    client->sendMsg(aggregateResultMsg.serialize().c_str());
+
+    cout << "Sent results to requester. Waiting for acknowledgement" << endl;
+    while (!server->acceptConn());
+
     while (true) {
-        // busy wait until connection is established
-        while (client->setupConn(requesterIpAddr, "tcp") != 0) {
-            sleep(5);
-        }
-        if (client->sendMsg(aggregateResultMsg.serialize().c_str()) != 0) {
-            continue;
-        }
-
-        if (!server->acceptConn())
-            continue;
-
         // receive response from requester
         string serializedData = server->receiveFromConn();
-        server->closeConn();
-        // process this request
         Message msg;
         msg.deserialize(serializedData);
-        shared_ptr<Payload> payload = msg.getPayload();
-
-        if (payload->getType() == Payload::Type::ACKNOWLEDGEMENT) {
+        if (msg.getPayload()->getType() == Payload::Type::ACKNOWLEDGEMENT) {
+            cout << "Acknowledgement received from requester" << endl;
             break;
         }
     }
+
+    server->closeConn();
 }
 
 void Provider::followerHandleTaskRequest() {
@@ -214,8 +215,10 @@ void Provider::processWorkload() {
     auto rcvdData = ml_zmq_receiver.receive();
     cout << "Received processed data" << endl;
 
-    // store result in taskResponse->trainingdata
-    taskResponse = make_unique<TaskResponse>(rcvdData);
+    // Parse received task response proto and populate TaskResponse object
+    payload::TaskResponse task_response_proto;
+    task_response_proto.ParseFromString(rcvdData);
+    taskResponse = make_unique<TaskResponse>(task_response_proto.modelstatedict());
     cout << "Completed assigned workload" << endl;
 }
 
@@ -243,6 +246,7 @@ TaskResponse Provider::aggregateResults(vector<string> followerData) {
     auto rcvdData = aggregator_zmq_receiver.receive();
     cout << "Received aggregated data" << endl;
 
-    taskResponse = make_unique<TaskResponse>(rcvdData);
-    return *taskResponse;
+    payload::TaskResponse aggTaskResponseProto;
+    aggTaskResponseProto.ParseFromString(rcvdData);
+    return TaskResponse(aggTaskResponseProto.modelstatedict());
 }

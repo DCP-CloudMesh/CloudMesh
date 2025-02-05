@@ -165,10 +165,11 @@ void Requester::checkStatus() {}
 TaskResponse Requester::getResults() {
     TaskResponse taskResult;
     // busy wait until connection is established
-    while (!server->acceptConn())
-        ;
+    cout << "Waiting for leader peer to connect" << endl;
+    while (!server->acceptConn());
 
     // get data from workers and aggregate
+    cout << "Waiting for leader peer to send results" << endl;
     string serializedData = server->receiveFromConn();
     server->replyToConn("Received task result.");
     server->closeConn();
@@ -177,9 +178,9 @@ TaskResponse Requester::getResults() {
     Message msg;
     msg.deserialize(serializedData);
     IpAddress leaderIpAddr = msg.getSenderIpAddr();
-    shared_ptr<TaskResponse> taskRespPtr =
-        static_pointer_cast<TaskResponse>(msg.getPayload());
-    taskResult = std::move(*taskRespPtr); // transfer data
+    // shared_ptr<TaskResponse> taskRespPtr =
+    //     static_pointer_cast<TaskResponse>(msg.getPayload());
+    // taskResult = std::move(*taskRespPtr); // transfer data
 
     // send success acknowledgement to provider
     shared_ptr<Acknowledgement> payload = make_shared<Acknowledgement>();

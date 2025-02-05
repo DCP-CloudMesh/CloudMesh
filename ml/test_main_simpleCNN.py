@@ -106,7 +106,6 @@ def main():
 
     # non compressed, non protobuf sending weights
     pickled_weights = pickle.dumps(model.state_dict())
-    # sender.send(pickled_weights)
 
     task_response = payload_pb2.TaskResponse()
     task_response.modelStateDict = pickled_weights

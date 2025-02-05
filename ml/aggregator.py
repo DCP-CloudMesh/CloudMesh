@@ -65,13 +65,9 @@ def main():
     avg_state_dict = nn_aggregator(state_dicts)
 
     # send the averaged model back to fake_peer.py
-    avg_model = SimpleCNN()
-    avg_model.load_state_dict(avg_state_dict)
-    avg_model = pickle.dumps(avg_model)
-
     print("Sending averaged model...")
-    tr = payload_pb2.AggregatorInputData()
-    tr.modelStateDict = avg_model
+    tr = payload_pb2.TaskResponse()
+    tr.modelStateDict = pickle.dumps(avg_state_dict)
     sender.send(tr.SerializeToString())
 
     print("Model averaging complete.")
