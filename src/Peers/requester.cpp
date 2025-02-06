@@ -69,7 +69,7 @@ void Requester::divideTask() {
 
     // obtain list of training files
     vector<string> trainingFiles =
-        queuedTask.getTrainingDataFiles(SOURCE_TRAINING_DATA_DIR);
+        queuedTask.getTrainingDataFiles(SOURCE_DATA_DIR);
     cout << "Found " << trainingFiles.size() << " training files" << endl;
 
     // // shuffle training files for even distribution after division
@@ -103,7 +103,7 @@ void Requester::divideTask() {
             subtaskTrainingFiles.push_back(trainingFiles[i * subtaskSize + j]);
         }
 
-        // Build a path by combining the filename and SOURCE_TRAINING_DATA_DIR
+        // Build a path by combining the filename and SOURCE_DATA_DIR
         // using path joins
         string filename = "subtaskIndex_" + std::to_string(i) + ".txt";
         TaskRequest subtaskRequest(1, filename, TaskRequest::INDEX_FILENAME);

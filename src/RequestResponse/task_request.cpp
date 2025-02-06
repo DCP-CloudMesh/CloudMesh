@@ -38,7 +38,7 @@ void TaskRequest::setTrainingDataIndexFilename(const std::string& filename) {
 
 void TaskRequest::writeToTrainingDataIndexFile(
     const vector<string>& trainingDataFiles) const {
-    fs::path indexFilePath = resolveDataFile(trainingDataIndexFilename);
+    fs::path indexFilePath = resolveDataFileInDirectory(trainingDataIndexFilename, SOURCE_DATA_DIR);
 
     // Create directory if it doesn't exist
     fs::create_directories(indexFilePath.parent_path());

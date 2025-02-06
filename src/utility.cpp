@@ -208,7 +208,7 @@ int FTP_accept_conn(int sock) {
 }
 
 fs::path resolveDataFile(const std::string filename) {
-    return resolveDataFileInDirectory(filename, SOURCE_TRAINING_DATA_DIR);
+    return resolveDataFileInDirectory(filename, SOURCE_DATA_DIR);
 }
 
 fs::path resolveDataFileInDirectory(const std::string filename,
@@ -227,7 +227,6 @@ bool isFileWithinDirectory(const std::string& filename, const std::string dir) {
             fs::canonical(fs::absolute(requestedPath)).string();
         return std::regex_search(canonicalPathStr, cloudmeshDataPattern);
     } catch (const std::exception& e) {
-        std::cerr << "Caught Error: " << e.what() << std::endl;
         return false; // Invalid path format or not within the data directory
     }
 }

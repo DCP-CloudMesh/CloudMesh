@@ -31,7 +31,7 @@ class TaskRequest : public Payload {
     void setAssignedWorkers(const AddressTable& assignedWorkers);
     void setGlobPattern(const std::string& pattern);
     void setTrainingDataIndexFilename(const std::string& filename);
-    // Write the index file(s) to SOURCE_TRAINING_DATA_DIR
+    // Write the index file(s) to SOURCE_DATA_DIR
     void writeToTrainingDataIndexFile(
         const std::vector<std::string>& trainingDataFiles) const;
 
