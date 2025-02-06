@@ -133,7 +133,7 @@ void Server::getFileIntoDirFTP(string filename, string directory) {
     recv(activeConn, msg, FTP_BUFFER_SIZE, 0);
     if (strcmp("nxt", msg) == 0) {
         if ((fp = fopen(
-                 resolveDataFileInDirectory(filename, TARGET_TRAINING_DATA_DIR)
+                 resolveDataFileInDirectory(filename, TARGET_DATA_DIR)
                      .c_str(),
                  "w")) == NULL)
             cout << "FTP: Error in creating file" << endl;

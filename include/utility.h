@@ -32,19 +32,15 @@ namespace fs = std::filesystem;
 #define MAX_PORT_TRIES 10
 
 /*
- * Defines the data location of training files.
+ * Defines the data location of training files and index files for the requestor.
  */
-const std::string SOURCE_TRAINING_DATA_DIR = "CIFAR10/train";
+const std::string SOURCE_DATA_DIR = "CIFAR10/train";
 
 /*
  * Defines the data location of training files being used locally by a provider.
  */
-const std::string TARGET_TRAINING_DATA_DIR = "data/CIFAR10";
+const std::string TARGET_DATA_DIR = "data/CIFAR10";
 
-/*
- * Defines the data index location of training files in a provider.
- */
-const std::string TARGET_INDEX_DATA_DIR = "data/index";
 
 struct IpAddress {
     std::string host;

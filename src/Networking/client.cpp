@@ -89,83 +89,111 @@ int Client::sendMsg(const string& data, int num_retries) {
 
     cout << "Client successfully sent message" << endl;
 
-    char buffer[1024];
-    ssize_t mLen = recv(CONN, buffer, sizeof(buffer), 0);
-    if (mLen < 0) {
-        cerr << "Error reading: " << strerror(errno) << endl;
-        closeSocket();
-        return 1;
-    }
-    buffer[mLen] = '\0';
+    // Set socket timeout to 3 seconds
+    struct timeval tv;
+    tv.tv_sec = 3;
+    tv.tv_usec = 0;
+    setsockopt(CONN, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
-    /*
-     * If the request received contains the keyword "get", which is used to
-     * represent a file transfer request, the client will proceed to provide the
-     * file.
-     */
-    // Using `std::istringstream` instead of strtok
-    std::istringstream iss(buffer);
-    std::string command, filename;
-    iss >> command >> filename; // Extract command and filename from message
+    int dataSock, listenSock;
+    int listenPort = get_available_port();
+    cout << "FTP: listen port is: " << listenPort << endl;
+    listenSock = FTP_create_socket_server(
+                listenPort); // creating socket for data connection
 
-    // process file descriptor
-    if (command == "get") {
-        char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE],
-            char_num_blks[FTP_BUFFER_SIZE], char_num_last_blk[FTP_BUFFER_SIZE];
-        int datasock, lSize, num_blks, num_last_blk, i;
-        FILE* fp;
-        cout << "FTP: Filename given is: " << filename << endl;
-
-        if (!isFileWithinDirectory(filename, SOURCE_TRAINING_DATA_DIR)) {
-            cerr << "FTP: Requested file is not within the data directory"
-                 << endl;
-            send(CONN, "0", FTP_BUFFER_SIZE, 0);
-            closeSocket();
+    while (true) {
+        char buffer[1024];
+        ssize_t mLen = recv(CONN, buffer, sizeof(buffer), 0);
+        
+        if (mLen < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                // Timeout occurred, no more messages
+                cout << "Timeout occurred, no more messages" << endl;
+                break;
+            }
+            cerr << "Error reading: " << strerror(errno) << endl;
+            close(CONN);
             return 1;
         }
 
-        int data_port = get_available_port();
-        if (data_port == -1) {
-            cerr << "FTP: No available ports" << endl;
-            send(CONN, "0", FTP_BUFFER_SIZE, 0);
-            closeSocket();
+        if (mLen == 0) {
+            cout << "Connection closed by server" << endl;
+            close(CONN);
             return 1;
         }
-        cout << "FTP: Data port is: " << data_port << endl;
-        sprintf(port, "%d", data_port);
-        datasock = FTP_create_socket_server(
-            data_port); // creating socket for data connection
-        send(CONN, port, FTP_BUFFER_SIZE, 0); // sending port no. to client
-        datasock = FTP_accept_conn(datasock); // accepting connnection by client
-        if ((fp = fopen(resolveDataFile(filename).c_str(), "r")) != NULL) {
-            // size of file
-            send(CONN, "nxt", FTP_BUFFER_SIZE, 0);
-            fseek(fp, 0, SEEK_END);
-            lSize = ftell(fp);
-            rewind(fp);
-            num_blks = lSize / FTP_BUFFER_SIZE;
-            num_last_blk = lSize % FTP_BUFFER_SIZE;
-            sprintf(char_num_blks, "%d", num_blks);
-            send(CONN, char_num_blks, FTP_BUFFER_SIZE, 0);
 
-            for (i = 0; i < num_blks; i++) {
-                fread(buffer, sizeof(char), FTP_BUFFER_SIZE, fp);
-                send(datasock, buffer, FTP_BUFFER_SIZE, 0);
+        buffer[mLen] = '\0';
+        cout << "FTP Server Received: " << string(buffer, mLen) << endl;
+
+        /*
+         * If the request received contains the keyword "get", which is used to
+         * represent a file transfer request, the client will proceed to provide the
+         * file.
+         */
+        // Using `std::istringstream` instead of strtok
+        std::istringstream iss(buffer);
+        std::string command, filename;
+        iss >> command >> filename; // Extract command and filename from message
+
+        // process file descriptor
+        if (command == "get") {
+            if (listenPort == -1) {
+                cerr << "FTP: No available ports" << endl;
+                send(CONN, "0", FTP_BUFFER_SIZE, 0);
+                close(CONN);
+                return 1;
             }
-            sprintf(char_num_last_blk, "%d", num_last_blk);
-            send(CONN, char_num_last_blk, FTP_BUFFER_SIZE, 0);
-            if (num_last_blk > 0) {
-                fread(buffer, sizeof(char), num_last_blk, fp);
-                send(datasock, buffer, FTP_BUFFER_SIZE, 0);
+
+            char port[FTP_BUFFER_SIZE], buffer[FTP_BUFFER_SIZE],
+                char_num_blks[FTP_BUFFER_SIZE], char_num_last_blk[FTP_BUFFER_SIZE];
+            int lSize, num_blks, num_last_blk, i;
+            FILE* fp;
+            cout << "FTP: Filename given is: " << filename << endl;
+
+            if (!isFileWithinDirectory(filename, SOURCE_DATA_DIR)) {
+                cerr << "FTP: Requested file is not within the data directory"
+                     << endl;
+                send(CONN, "0", FTP_BUFFER_SIZE, 0);
+                close(CONN);
+                return 1;
+            }            
+            
+            sprintf(port, "%d", listenPort);
+            send(CONN, port, FTP_BUFFER_SIZE, 0); // sending port no. to client
+            dataSock = FTP_accept_conn(listenSock); // accepting connnection by client
+
+            if ((fp = fopen(resolveDataFile(filename).c_str(), "r")) != NULL) {
+                // size of file
+                send(CONN, "nxt", FTP_BUFFER_SIZE, 0);
+                fseek(fp, 0, SEEK_END);
+                lSize = ftell(fp);
+                rewind(fp);
+                num_blks = lSize / FTP_BUFFER_SIZE;
+                num_last_blk = lSize % FTP_BUFFER_SIZE;
+                sprintf(char_num_blks, "%d", num_blks);
+                send(CONN, char_num_blks, FTP_BUFFER_SIZE, 0);
+
+                for (i = 0; i < num_blks; i++) {
+                    fread(buffer, sizeof(char), FTP_BUFFER_SIZE, fp);
+                    send(dataSock, buffer, FTP_BUFFER_SIZE, 0);
+                }
+                sprintf(char_num_last_blk, "%d", num_last_blk);
+                send(CONN, char_num_last_blk, FTP_BUFFER_SIZE, 0);
+                if (num_last_blk > 0) {
+                    fread(buffer, sizeof(char), num_last_blk, fp);
+                    send(dataSock, buffer, FTP_BUFFER_SIZE, 0);
+                }
+                fclose(fp);
+                cout << "FTP: File upload done" << endl;
+            } else {
+                send(CONN, "0", FTP_BUFFER_SIZE, 0);
             }
-            fclose(fp);
-            cout << "FTP: File upload done" << endl;
-        } else {
-            send(CONN, "0", FTP_BUFFER_SIZE, 0);
+            close(dataSock);
         }
     }
 
     closeSocket();
+    close(listenSock);
     return 0;
 }
 

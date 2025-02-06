@@ -42,8 +42,8 @@ void TaskRequest::setNumEpochs(const unsigned int numEpochs) {
 
 void TaskRequest::writeToTrainingDataIndexFile(
     const vector<string>& trainingDataFiles) const {
+    fs::path indexFilePath = resolveDataFileInDirectory(trainingDataIndexFilename, SOURCE_DATA_DIR);
 
-    fs::path indexFilePath = resolveDataFile(trainingDataIndexFilename);
     // Create directory if it doesn't exist
     fs::create_directories(indexFilePath.parent_path());
 

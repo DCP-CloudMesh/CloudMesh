@@ -33,7 +33,7 @@ class TaskRequest : public Payload {
     void setGlobPattern(const std::string& pattern);
     void setTrainingDataIndexFilename(const std::string& filename);
     void setNumEpochs(const unsigned int numEpochs);
-    // Write the index file(s) to SOURCE_TRAINING_DATA_DIR
+    // Write the index file(s) to SOURCE_DATA_DIR
     void writeToTrainingDataIndexFile(
         const std::vector<std::string>& trainingDataFiles) const;
 
