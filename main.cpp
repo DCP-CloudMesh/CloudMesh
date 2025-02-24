@@ -47,11 +47,7 @@ int main(int argc, char* argv[]) {
     } else if (requestType == "r") {
         TaskResponse response = r.getResults();
         auto result = response.getTrainingData();
-        cout << "Received response: ";
-        for (auto& value : result) {
-            cout << value << " ";
-        }
-        cout << endl;
+        cout << "Received training results" << endl;
     }
 
 #else
