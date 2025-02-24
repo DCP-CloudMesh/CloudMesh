@@ -55,6 +55,8 @@ def main():
     state_dicts = []
     for i in range(num_peers):
         sd = responder.recv()
+        responder.send_string("ACK")
+
         agg_inp = payload_pb2.AggregatorInputData()
         agg_inp.ParseFromString(sd)
         agg_inp = pickle.loads(agg_inp.modelStateDict)
@@ -70,10 +72,11 @@ def main():
     tr.modelStateDict = pickle.dumps(avg_state_dict)
     sender.send(tr.SerializeToString())
 
-    print("Sent averaged model, sleeping...")
-    # TODO: Change following to wait for response, at which program should end
-    while True:
-        time.sleep(10)
+    print("Sent averaged model, waiting for acknowledgement")
+
+    acknowledgement = sender.recv()
+    print("Acknowledgement received")
+    return
 
 
 if __name__ == "__main__":

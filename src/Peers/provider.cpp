@@ -220,12 +220,14 @@ void Provider::processWorkload() {
 
     // send training data index file to the worker
     cout << "Working on training data index file: " << indexFile << endl;
-    payload::TrainingData proto;
-    proto.set_training_data_index_filename(indexFile);
-    string serialized;
-    proto.SerializeToString(&serialized);
+
     cout << "Sending training data index file to worker..." << endl;
-    ml_zmq_sender.send(serialized);
+    payload::TrainingData training_data_proto;
+    training_data_proto.set_training_data_index_filename(indexFile);
+    string serialized_training_data;
+    training_data_proto.SerializeToString(&serialized_training_data);
+    ml_zmq_sender.send(serialized_training_data);
+
     cout << "Waiting for processed data..." << endl;
     auto rcvdData = ml_zmq_receiver.receive();
     cout << "Received processed data" << endl;

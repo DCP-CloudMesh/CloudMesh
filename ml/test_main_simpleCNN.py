@@ -38,8 +38,7 @@ def main():
 
     # recieve a payload with the data_file_names
     payload = responder.recv()
-    # acknowledgement string
-    # responder.send_string("")
+    responder.send_string("ACK")
 
     training_payload = payload_pb2.TrainingData()
     training_payload.ParseFromString(payload)
@@ -110,10 +109,10 @@ def main():
     task_response = payload_pb2.TaskResponse()
     task_response.modelStateDict = pickled_weights
     sender.send(task_response.SerializeToString())
+    print("Sent results, waiting for acknowledgement...")
     
-    print("sent results, sleeping...")
-    while True:
-        time.sleep(10)
+    acknowledgement = sender.recv()
+    print("Acknowledgement received")
 
     return
 
