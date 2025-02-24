@@ -70,8 +70,10 @@ def main():
     tr.modelStateDict = pickle.dumps(avg_state_dict)
     sender.send(tr.SerializeToString())
 
-    print("Model averaging complete.")
-    return
+    print("Sent averaged model, sleeping...")
+    # TODO: Change following to wait for response, at which program should end
+    while True:
+        time.sleep(10)
 
 
 if __name__ == "__main__":
