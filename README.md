@@ -141,6 +141,7 @@ protoc --python_out=ml <.proto file location>
 Example:
 ```
 protoc --python_out=ml proto/payload.proto
+protoc --python_out=ml proto/utility.proto
 ```
 
 

@@ -32,3 +32,4 @@ third_party/libzmq*
 *.pyc
 CIFAR10/output
 CIFAR10/*.txt
+ml/proto
