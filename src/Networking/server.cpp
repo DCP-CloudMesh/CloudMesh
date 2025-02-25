@@ -136,7 +136,7 @@ void Server::getFileIntoDirFTP(string filename, string directory) {
                  resolveDataFileInDirectory(filename, TARGET_DATA_DIR)
                      .c_str(),
                  "w")) == NULL)
-            cout << "FTP: Error in creating file" << endl;
+            cout << "FTP: Error in creating file. errno: " << strerror(errno) << endl;
         else {
             recv(activeConn, char_num_blks, FTP_BUFFER_SIZE, 0);
             num_blks = atoi(char_num_blks);
@@ -156,6 +156,7 @@ void Server::getFileIntoDirFTP(string filename, string directory) {
     } else {
         cerr << "FTP: Error in opening file. Check filename" << endl;
     }
+    close(datasock);
 }
 
 void Server::closeConn() {

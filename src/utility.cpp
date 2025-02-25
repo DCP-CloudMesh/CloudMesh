@@ -215,6 +215,9 @@ int get_available_port() {
 
         close(sock);
     }
+
+    std::cerr << "Unable to find an available port after " << MAX_PORT_TRIES
+         << " tries" << std::endl;
     return -1;
 }
 
