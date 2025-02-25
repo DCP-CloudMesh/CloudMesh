@@ -4,6 +4,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score, confusion_m
 import seaborn as sns
 import matplotlib.pyplot as plt
 import json
+import os
 
 
 def val(model, device, val_loader, criterion, epoch, output_path, num_classes=10):
@@ -55,7 +56,10 @@ def val(model, device, val_loader, criterion, epoch, output_path, num_classes=10
         "f1": f1,
         "confusion_matrix": conf_mat.tolist(),
     }
-    with open(f"{output_path}output/metrics_{epoch}.json", "w") as f:
+
+    metrics_file_path = f"{output_path}output/metrics_{epoch}.json"
+    os.makedirs(os.path.dirname(metrics_file_path), exist_ok=True)
+    with open(metrics_file_path, "w") as f:
         json.dump(metrics, f, indent=4)
 
     # Plot confusion matrix
