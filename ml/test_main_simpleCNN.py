@@ -11,6 +11,7 @@ import zmq
 from networks import SimpleCNN
 from dataloader import CIFAR10Dataset, get_data_loaders
 from utils import train, val, test
+from proto import payload_pb2, utility_pb2
 
 
 def main():
@@ -36,9 +37,14 @@ def main():
     print(f"Using device: {device}")
 
     # recieve a payload with the data_file_names
-    payload = responder.recv_string()
-    responder.send_string("")
-    data_file_names = str(payload)
+    payload = responder.recv()
+    responder.send_string("ACK")
+
+    training_payload = payload_pb2.TrainingData()
+    training_payload.ParseFromString(payload)
+    data_file_names = training_payload.training_data_index_filename
+    print("data_file_names: ", data_file_names)
+
     start_time = time.time()
 
     # Define transforms
@@ -50,16 +56,17 @@ def main():
     )
 
     # Create the datasets
-    data_path = "CIFAR10/"
+    data_path = "CIFAR10/train"
     with open(os.path.join(data_path, data_file_names)) as f:
         data_file_names = f.read().splitlines()
     if not os.path.exists(os.path.join(data_path, "output")):
         os.mkdir(os.path.join(data_path, "output"))
     train_dataset = CIFAR10Dataset(
-        os.path.join(data_path, "train"), data_file_names, transform=transform
+        data_path, data_file_names, transform=transform
     )
     print("train_dataset length: ", len(train_dataset))
 
+    data_path = "CIFAR10/"
     data_file_names = "test.txt"
     with open(os.path.join(data_path, data_file_names)) as f:
         data_file_names = f.read().splitlines()
@@ -98,9 +105,14 @@ def main():
 
     # non compressed, non protobuf sending weights
     pickled_weights = pickle.dumps(model.state_dict())
-    sender.send(pickled_weights)
-    ack = sender.recv_string()
-    print(ack)
+
+    task_response = payload_pb2.TaskResponse()
+    task_response.modelStateDict = pickled_weights
+    sender.send(task_response.SerializeToString())
+    print("Sent results, waiting for acknowledgement...")
+    
+    acknowledgement = sender.recv()
+    print("Acknowledgement received")
 
     return
 

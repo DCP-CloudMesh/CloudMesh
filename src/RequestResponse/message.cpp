@@ -72,12 +72,24 @@ string Message::serialize() const {
         serializeIpAddressToProto(senderIpAddr));
 
     switch (payload->getType()) {
-    case Payload::Type::ACKNOWLEDGEMENT:
+    case Payload::Type::ACKNOWLEDGEMENT: {
         messageProto.set_payloadtype(payload::PayloadType::ACKNOWLEDGEMENT);
+        shared_ptr<Acknowledgement> acknowledgement =
+            getPayloadAs<Acknowledgement>();
+        auto* acknowledgementProto = static_cast<payload::Acknowledgement*>(
+            acknowledgement->serializeToProto());
+        messageProto.set_allocated_acknowledgement(acknowledgementProto);
         break;
-    case Payload::Type::REGISTRATION:
+    }
+    case Payload::Type::REGISTRATION: {
         messageProto.set_payloadtype(payload::PayloadType::REGISTRATION);
+        shared_ptr<Registration> registration = getPayloadAs<Registration>();
+        payload::Registration* registrationProto =
+            static_cast<payload::Registration*>(
+                registration->serializeToProto());
+        messageProto.set_allocated_registration(registrationProto);
         break;
+    }
     case Payload::Type::DISCOVERY_REQUEST: {
         messageProto.set_payloadtype(payload::PayloadType::DISCOVERY_REQUEST);
         shared_ptr<DiscoveryRequest> discoveryReq =
@@ -93,7 +105,6 @@ string Message::serialize() const {
             getPayloadAs<DiscoveryResponse>();
         auto* drProto = static_cast<payload::DiscoveryResponse*>(
             discoveryResp->serializeToProto());
-
         messageProto.set_allocated_discoveryresponse(drProto);
         break;
     }
@@ -102,9 +113,7 @@ string Message::serialize() const {
         shared_ptr<TaskRequest> taskReq = getPayloadAs<TaskRequest>();
         auto* taskReqProto =
             static_cast<payload::TaskRequest*>(taskReq->serializeToProto());
-
         messageProto.set_allocated_taskrequest(taskReqProto);
-
         break;
     }
     case Payload::Type::TASK_RESPONSE: {
@@ -112,14 +121,12 @@ string Message::serialize() const {
         shared_ptr<TaskResponse> taskResp = getPayloadAs<TaskResponse>();
         auto* taskRespProto =
             static_cast<payload::TaskResponse*>(taskResp->serializeToProto());
-
         messageProto.set_allocated_taskresponse(taskRespProto);
-
         break;
     }
     default:
         cerr << "Unknown type" << endl;
-        break;
+        exit(EXIT_FAILURE);
     }
 
     string serialized;
@@ -129,50 +136,48 @@ string Message::serialize() const {
 }
 
 void Message::deserialize(const string& serializedData) {
-    auto messageProto = new payload::PayloadMessage();
-    if (!messageProto->ParseFromString(serializedData)) {
+    payload::PayloadMessage messageProto;
+    if (!messageProto.ParseFromString(serializedData)) {
         cerr << "Failed to parse Message from string" << endl;
+        exit(EXIT_FAILURE);
     }
 
-    uuid = messageProto->id();
-    senderUuid = messageProto->senderid();
+    uuid = messageProto.id();
+    senderUuid = messageProto.senderid();
     senderIpAddr =
-        deserializeIpAddressFromProto(messageProto->senderipaddress());
+        deserializeIpAddressFromProto(messageProto.senderipaddress());
 
     cout << "Deserializing message with id: " << uuid << " from " << senderUuid
          << " at " << senderIpAddr.host << ":" << senderIpAddr.port << endl;
 
-    string payloadType = payload::PayloadType_Name(messageProto->payloadtype());
+    string payloadType = payload::PayloadType_Name(messageProto.payloadtype());
     initializePayload(payloadType);
 
     // deserialize payloads
-    if (messageProto->payloadtype() ==
-        payload::PayloadType::DISCOVERY_REQUEST) {
+    if (messageProto.payloadtype() == payload::PayloadType::DISCOVERY_REQUEST) {
         const payload::DiscoveryRequest& discoveryRequest =
-            messageProto->discoveryrequest();
+            messageProto.discoveryrequest();
         payload->deserializeFromProto(discoveryRequest);
-    } else if (messageProto->payloadtype() ==
+    } else if (messageProto.payloadtype() ==
                payload::PayloadType::DISCOVERY_RESPONSE) {
         const payload::DiscoveryResponse& discoveryResponse =
-            messageProto->discoveryresponse();
+            messageProto.discoveryresponse();
         payload->deserializeFromProto(discoveryResponse);
-    } else if (messageProto->payloadtype() ==
+    } else if (messageProto.payloadtype() ==
                payload::PayloadType::TASK_REQUEST) {
-        const payload::TaskRequest& taskRequest = messageProto->taskrequest();
+        const payload::TaskRequest& taskRequest = messageProto.taskrequest();
         payload->deserializeFromProto(taskRequest);
-    } else if (messageProto->payloadtype() ==
+    } else if (messageProto.payloadtype() ==
                payload::PayloadType::TASK_RESPONSE) {
-        const payload::TaskResponse& taskResponse =
-            messageProto->taskresponse();
+        const payload::TaskResponse& taskResponse = messageProto.taskresponse();
         payload->deserializeFromProto(taskResponse);
-    } else if (messageProto->payloadtype() ==
+    } else if (messageProto.payloadtype() ==
                payload::PayloadType::REGISTRATION) {
-        const payload::Registration& registration =
-            messageProto->registration();
+        const payload::Registration& registration = messageProto.registration();
         payload->deserializeFromProto(registration);
-    } else if (messageProto->payloadtype() ==
+    } else if (messageProto.payloadtype() ==
                payload::PayloadType::ACKNOWLEDGEMENT) {
-        const payload::Acknowledgement& ack = messageProto->acknowledgement();
+        const payload::Acknowledgement& ack = messageProto.acknowledgement();
         payload->deserializeFromProto(ack);
     } else {
         cerr << "Unknown or unsupported payload type for deserialization"

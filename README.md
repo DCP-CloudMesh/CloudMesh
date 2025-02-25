@@ -133,6 +133,18 @@ http_archive(
 #include "proto/{name}.pb.h"
 ```
 
+### How to build proto python file
+Run the following command in project root directory:
+```
+protoc --python_out=ml <.proto file location>
+```
+Example:
+```
+protoc --python_out=ml proto/payload.proto
+protoc --python_out=ml proto/utility.proto
+```
+
+
 ## VSCode Include Path (to get rid of red squiggly lines)
 To include the dependency build files in VSCode, add the following to the includePath for Cpp:
 ```json

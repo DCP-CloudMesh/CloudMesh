@@ -67,13 +67,51 @@ bool Server::acceptConn() {
     return true;
 }
 
-string Server::receiveFromConn() {
-    char buffer[1024];
-    ssize_t mLen = recv(activeConn, buffer, sizeof(buffer), 0);
-    if (mLen < 0) {
-        cerr << "Error reading: " << strerror(errno) << endl;
+ssize_t Server::recv_all_bytes(char* buffer, size_t length, int flags, int num_retries) {
+    size_t total_received = 0;
+    int retries_used = 0;
+    while (total_received < length) {
+        ssize_t bytes_received = recv(activeConn, buffer + total_received,
+                                     length - total_received, flags);
+
+        if (bytes_received == 0) {
+            cerr << "Connection closed by client" << endl;
+            return -1;
+        } else if (bytes_received == -1) {
+            if (num_retries == -1 || retries_used < num_retries) {
+                retries_used++;
+                continue;
+            }
+            cerr << "Failed to receive all bytes. " << total_received << "/"
+                 << length << " bytes received after " << retries_used
+                 << " retries." << endl;
+            return -1;
+        }
+
+        total_received += bytes_received;
     }
-    return string(buffer, mLen);
+    return total_received;
+}
+
+int Server::receiveFromConn(string& msg, int num_retries) {
+    // Read message size
+    uint32_t data_size;
+    if (recv_all_bytes(reinterpret_cast<char*>(&data_size), sizeof(data_size), 0, num_retries) == -1) {
+        cerr << "Failed to receive message length" << endl;
+        return 1;
+    }
+    data_size = ntohl(data_size); // Convert from network byte order
+
+    // Read message data
+    string data(data_size, '\0');
+    if (recv_all_bytes(data.data(), data_size, 0, num_retries) == -1) {
+        cerr << "Failed to receive message data" << endl;
+        return 1;
+    }
+
+    msg = data;
+
+    return 0;
 }
 
 void Server::replyToConn(string message) {
