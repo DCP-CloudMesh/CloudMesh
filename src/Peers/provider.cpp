@@ -35,31 +35,41 @@ void Provider::registerWithBootstrap() {
     const char* bootstrapPort = BootstrapNode::getServerPort();
     cout << "Connecting to bootstrap node at " << bootstrapHost << ":"
          << bootstrapPort << endl;
-    client->setupConn(bootstrapHost, bootstrapPort, "tcp");
+    if (client->setupConn(bootstrapHost, bootstrapPort, "tcp") == -1) {
+        cerr << "Unable to connect to boostrap node" << endl;
+        exit(1);
+    }
 
     shared_ptr<Registration> payload = make_shared<Registration>();
     Message msg(uuid, IpAddress(host, port), payload);
 
-    client->sendMsg(msg.serialize().c_str());
+    client->sendMsg(msg.serialize(), -1);
 }
 
 void Provider::listen() {
     while (true) {
         cout << "Waiting for requester to connect..." << endl;
-        if (!server->acceptConn())
+        if (!server->acceptConn()) {
             continue;
+        }
 
         // receive task request object from client
-        string requesterData = server->receiveFromConn();
+        string requesterData;
+        if(server->receiveFromConn(requesterData) == 1) {
+            server->closeConn();
+            continue;
+        }
+
         Message requesterMsg;
         requesterMsg.deserialize(requesterData);
+        if (requesterMsg.getPayload()->getType() != Payload::Type::TASK_REQUEST) {
+            server->closeConn();
+            continue;
+        }
+
         string requesterUuid = requesterMsg.getSenderUuid();
         IpAddress requesterIpAddr = requesterMsg.getSenderIpAddr();
         shared_ptr<Payload> requesterPayload = requesterMsg.getPayload();
-
-        if (requesterPayload->getType() != Payload::Type::TASK_REQUEST) {
-            continue;
-        }
 
         // Parse and assign member field with task request received
         shared_ptr<TaskRequest> taskReq =
@@ -79,7 +89,9 @@ void Provider::listen() {
         // Download and parse training data index file from requester
         cout << "FTP: requesting index: "
              << taskRequest->getTrainingDataIndexFilename() << endl;
-        server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
+
+        // bug here where we are saving the file to the same file
+        // server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
 
         server->closeConn();
 
@@ -98,16 +110,22 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     vector<string> followerData{};
     while (followerData.size() < taskRequest->getAssignedWorkers().size() - 1) {
         cout << "\nWaiting for follower peer to connect..." << endl;
-        while (!server->acceptConn())
-            ;
+        while (!server->acceptConn());
 
         // get data from followers and aggregate
-        string followerMsgStr = server->receiveFromConn();
+        string followerMsgStr;
+        if (server->receiveFromConn(followerMsgStr) == 1) {
+            cerr << "Failed to receive data from follower" << endl;
+            server->closeConn();
+            continue;
+        }
+
         Message followerMsg;
         followerMsg.deserialize(followerMsgStr);
         shared_ptr<Payload> followerPayload = followerMsg.getPayload();
 
         if (followerPayload->getType() != Payload::Type::TASK_RESPONSE) {
+            server->closeConn();
             continue;
         }
 
@@ -130,32 +148,36 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
         make_shared<TaskResponse>(aggregatedResults);
     Message aggregateResultMsg(uuid, IpAddress(host, port), aggregatePayload);
 
-    cout << "Waiting for connection back to requester" << endl;
-    // Keep trying to send results back to requester
+    // busy wait until connection is established
+    while (client->setupConn(requesterIpAddr, "tcp") != 0) {
+        constexpr int retry = 5;
+        cout << "Failed to connect to requester server, trying again in " << retry << "s" << endl;
+        sleep(retry);
+    }
+    cout << "Connected to requester server" << endl;
+
+    if (client->sendMsg(aggregateResultMsg.serialize(), 5) == 1) {
+        cerr << "Failed to send aggregated result to requester" << endl;
+        return;
+    }
+
+    cout << "Sent results to requester. Waiting for acknowledgement" << endl;
+    while (!server->acceptConn());
+
     while (true) {
-        // busy wait until connection is established
-        while (client->setupConn(requesterIpAddr, "tcp") != 0) {
-            sleep(5);
-        }
-        if (client->sendMsg(aggregateResultMsg.serialize().c_str()) != 0) {
-            continue;
-        }
-
-        if (!server->acceptConn())
-            continue;
-
         // receive response from requester
-        string serializedData = server->receiveFromConn();
-        server->closeConn();
-        // process this request
+        string serializedData;
+        server->receiveFromConn(serializedData, -1);
+
         Message msg;
         msg.deserialize(serializedData);
-        shared_ptr<Payload> payload = msg.getPayload();
-
-        if (payload->getType() == Payload::Type::ACKNOWLEDGEMENT) {
+        if (msg.getPayload()->getType() == Payload::Type::ACKNOWLEDGEMENT) {
+            cout << "Acknowledgement received from requester" << endl;
             break;
         }
     }
+
+    server->closeConn();
 }
 
 void Provider::followerHandleTaskRequest() {
@@ -171,11 +193,8 @@ void Provider::followerHandleTaskRequest() {
     // send results back to leader
     shared_ptr<TaskResponse> payload = std::move(taskResponse);
     Message msg(uuid, IpAddress(host, port), payload);
-
-    // keep trying to send results back to leader
-    while (client->sendMsg(msg.serialize().c_str()) != 0) {
-        sleep(5);
-    }
+    int code = client->sendMsg(msg.serialize(), -1);
+    cout << "Follower sent data to leader with code " << code << endl;
 }
 
 string Provider::ingestTrainingData() {
@@ -201,31 +220,41 @@ void Provider::processWorkload() {
 
     // send training data index file to the worker
     cout << "Working on training data index file: " << indexFile << endl;
-    payload::TrainingData proto;
-    proto.set_training_data_index_filename(indexFile);
-    string serialized;
-    proto.SerializeToString(&serialized);
-    ml_zmq_sender.send(serialized);
+
+    cout << "Sending training data index file to worker..." << endl;
+    payload::TrainingData training_data_proto;
+    training_data_proto.set_training_data_index_filename(indexFile);
+    string serialized_training_data;
+    training_data_proto.SerializeToString(&serialized_training_data);
+    ml_zmq_sender.send(serialized_training_data);
+
     cout << "Waiting for processed data..." << endl;
     auto rcvdData = ml_zmq_receiver.receive();
     cout << "Received processed data" << endl;
 
-    // store result in taskResponse->trainingdata
-    taskResponse = make_unique<TaskResponse>(rcvdData);
+    // Parse received task response proto and populate TaskResponse object
+    payload::TaskResponse task_response_proto;
+    task_response_proto.ParseFromString(rcvdData);
+    taskResponse = make_unique<TaskResponse>(task_response_proto.modelstatedict());
     cout << "Completed assigned workload" << endl;
 }
 
 TaskResponse Provider::aggregateResults(vector<string> followerData) {
+    cout << "Aggregating results..." << endl;
+
     // append leader's data to followerData
     string curr_data = taskResponse->getTrainingData();
     followerData.push_back(curr_data);
 
     // send each follower's data to the aggregator
+    cout << "Sending data to aggregator..." << endl;
     for (int i = 0; i < followerData.size(); i++) {
-        payload::AggregatorInputData proto;
-        proto.set_modelstatedict(followerData[i]);
+        cout << "Aggregator for loop: " << i << endl;
+        payload::AggregatorInputData* proto =
+            new payload::AggregatorInputData();
+        proto->set_modelstatedict(followerData[i]);
         string serialized;
-        proto.SerializeToString(&serialized);
+        proto->SerializeToString(&serialized);
         aggregator_zmq_sender.send(serialized);
     }
 
@@ -234,6 +263,7 @@ TaskResponse Provider::aggregateResults(vector<string> followerData) {
     auto rcvdData = aggregator_zmq_receiver.receive();
     cout << "Received aggregated data" << endl;
 
-    taskResponse = make_unique<TaskResponse>(rcvdData);
-    return *taskResponse;
+    payload::TaskResponse aggTaskResponseProto;
+    aggTaskResponseProto.ParseFromString(rcvdData);
+    return TaskResponse(aggTaskResponseProto.modelstatedict());
 }

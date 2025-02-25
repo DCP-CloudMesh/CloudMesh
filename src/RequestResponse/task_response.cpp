@@ -16,7 +16,6 @@ void TaskResponse::setTrainingData(const string& modelStateDict) {
 google::protobuf::Message* TaskResponse::serializeToProto() const {
     payload::TaskResponse* proto = new payload::TaskResponse();
     proto->set_modelstatedict(modelStateDict);
-
     return proto;
 }
 
