@@ -49,7 +49,6 @@ void TaskRequest::writeToTrainingDataIndexFile(
 
     try {
         for (const string& filename : trainingDataFiles) {
-            // cout << filename << " ";
             indexFile << filename << endl;
 
             // Check for write errors after each write
