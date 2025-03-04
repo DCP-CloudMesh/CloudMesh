@@ -29,7 +29,7 @@ class Server {
     bool acceptConn();                                          // blocking
     int receiveFromConn(std::string& msg, int num_retries = 0); // process the active conn
     void replyToConn(std::string message);                      // reply to the active conn
-    void getFileFTP(std::string filename);                      // retrieve remote file
+    void getFileIntoDirFTP(std::string filename, std::string directory); // retrieve remote file into directory
     void closeConn();                                           // close the active conn
 };
 
