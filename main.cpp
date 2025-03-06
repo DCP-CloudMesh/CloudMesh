@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     if (requestType == "c") {
         TaskRequest request =
-            TaskRequest(numRequestedWorkers, ".*subtaskData_.*\\.txt$",
+            TaskRequest(numRequestedWorkers, ".*\\.jpg$",
                         TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
@@ -47,11 +47,7 @@ int main(int argc, char* argv[]) {
     } else if (requestType == "r") {
         TaskResponse response = r.getResults();
         auto result = response.getTrainingData();
-        cout << "Received response: ";
-        for (auto& value : result) {
-            cout << value << " ";
-        }
-        cout << endl;
+        cout << "Received training results" << endl;
     }
 
 #else

@@ -51,23 +51,47 @@ int Client::setupConn(const IpAddress& ipAddress, const char* CONNTYPE) {
                      CONNTYPE);
 }
 
-int Client::sendMsg(const char* data) {
-    // retry if failed 5 times
-    bool sent = false;
-    for (int i = 0; i < 5; i++) {
-        if (send(CONN, data, strlen(data), 0) == -1) {
-            cerr << "Retrying sending request..." << endl;
-        } else {
-            sent = true;
-            break;
-        }
-    }
+ssize_t Client::send_all_bytes(const char* buffer, size_t length, int flags,
+                               int num_retries) {
+    size_t total_sent = 0;
+    int retries_used = 0;
+    while (total_sent < length) {
+        ssize_t bytes_sent =
+            send(CONN, buffer + total_sent, length - total_sent, flags);
 
-    if (!sent) {
-        cerr << "Error sending request: " << strerror(errno) << endl;
-        close(CONN);
+        if (bytes_sent == -1) {
+            // No bytes were sent
+            if (num_retries == -1 || retries_used < num_retries) {
+                sleep(5);
+                retries_used++;
+                continue;
+            }
+            cerr << "Failed to send all bytes. " << total_sent << "/" << length
+                 << " bytes sent after " << retries_used << " retries." << endl;
+            return -1;
+        }
+
+        total_sent += bytes_sent;
+    }
+    return total_sent;
+}
+
+int Client::sendMsg(const string& data, int num_retries) {
+
+    // Send message length first
+    uint32_t data_size = htonl(data.size()); // Convert from host byte order to network byte order
+    if (send_all_bytes(reinterpret_cast<char*>(&data_size), sizeof(data_size), 0, num_retries) == -1) {
+        cerr << "Failed to send message length" << endl;
         return 1;
     }
+
+    // Send message data
+    if (send_all_bytes(data.c_str(), data.size(), 0, num_retries) == -1) {
+        cerr << "Failed to send message data" << endl;
+        return 1;
+    }
+
+    cout << "Client successfully sent message" << endl;
 
     char buffer[1024];
     ssize_t mLen = recv(CONN, buffer, sizeof(buffer), 0);
@@ -77,7 +101,6 @@ int Client::sendMsg(const char* data) {
         return 1;
     }
     buffer[mLen] = '\0';
-    cout << "FTP Server Received: " << string(buffer, mLen) << endl;
 
     /*
      * If the request received contains the keyword "get", which is used to

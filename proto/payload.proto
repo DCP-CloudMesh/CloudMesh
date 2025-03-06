@@ -43,7 +43,11 @@ message TaskRequest {
     }
 }
 
-message TaskResponse { repeated int32 trainingData = 1; }
+message TrainingData { string training_data_index_filename = 1; }
+
+message AggregatorInputData { bytes modelStateDict = 1;  }
+
+message TaskResponse { bytes modelStateDict = 1; }
 
 message Acknowledgement {}
 

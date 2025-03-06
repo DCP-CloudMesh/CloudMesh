@@ -19,8 +19,12 @@ class Provider : public Peer {
     bool isLeader;
     std::unique_ptr<TaskRequest> taskRequest;
     std::unique_ptr<TaskResponse> taskResponse;
-    ZMQSender zmq_sender;
-    ZMQReceiver zmq_receiver;
+
+    ZMQSender ml_zmq_sender;
+    ZMQReceiver ml_zmq_receiver;
+
+    ZMQSender aggregator_zmq_sender;
+    ZMQReceiver aggregator_zmq_receiver;
 
   public:
     Provider(const char* port, std::string uuid);
@@ -32,9 +36,9 @@ class Provider : public Peer {
     void followerHandleTaskRequest();
     void processData();
     void processWorkload(); // worker function to manipulate the TaskRequest
-    std::vector<int>
+    std::string
     ingestTrainingData(); // worker function to load training data into memory
-    TaskResponse aggregateResults(std::vector<std::vector<int>> followerData);
+    TaskResponse aggregateResults(std::vector<std::string> followerData);
 };
 
 #endif

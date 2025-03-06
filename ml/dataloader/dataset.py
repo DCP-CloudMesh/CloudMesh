@@ -6,7 +6,7 @@ from torchvision import datasets, transforms
 
 
 class CIFAR10Dataset(Dataset):
-    def __init__(self, root, transform=None):
+    def __init__(self, root, data_file_names, transform=None):
         self.root = root
         self.transform = transform
         self.classes = (
@@ -22,9 +22,14 @@ class CIFAR10Dataset(Dataset):
             "truck",
         )
         self.class_to_idx = {cls_name: i for i, cls_name in enumerate(self.classes)}
-        self.samples = [
-            s for s in os.listdir(root) if os.path.isfile(os.path.join(root, s))
-        ]
+        samples = [s for s in os.listdir(root) if os.path.isfile(os.path.join(root, s))]
+
+        self.samples = []
+        for s in samples:
+            for dfn in data_file_names:
+                if dfn in s:
+                    self.samples.append(s)
+                    break
 
     def __len__(self):
         return len(self.samples)
