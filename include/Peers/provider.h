@@ -35,7 +35,9 @@ class Provider : public Peer {
     void leaderHandleTaskRequest(const IpAddress& requesterIpAddr);
     void followerHandleTaskRequest();
     void processData();
-    void processWorkload(); // worker function to manipulate the TaskRequest
+    void initializeWorkloadToML(); // worker function to manipulate the TaskRequest
+    void processWorkload(); // 
+
     std::string
     ingestTrainingData(); // worker function to load training data into memory
     TaskResponse aggregateResults(std::vector<std::string> followerData);

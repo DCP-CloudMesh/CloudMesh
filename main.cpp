@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
     cout << "Running as requester." << endl;
     Requester r = Requester(port);
     int numRequestedWorkers = 2;
+    int numEpochs = 2;
 
     string requestType = "c";
     if (argc >= 3) {
@@ -38,7 +39,7 @@ int main(int argc, char* argv[]) {
 
     if (requestType == "c") {
         TaskRequest request =
-            TaskRequest(numRequestedWorkers, ".*\\.jpg$",
+            TaskRequest(numRequestedWorkers, ".*\\.jpg$", numEpochs
                         TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers

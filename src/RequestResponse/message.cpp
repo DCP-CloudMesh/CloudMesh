@@ -7,6 +7,7 @@
 #include "../../include/RequestResponse/registration.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/RequestResponse/task_response.h"
+#include "../../include/RequestResponse/model_state_dict_params.h"
 #include "../../include/utility.h"
 
 using namespace std;
@@ -46,6 +47,8 @@ void Message::initializePayload(const string& payloadTypeStr) {
         payload = make_shared<TaskRequest>();
     } else if (payloadTypeStr == "TASK_RESPONSE") {
         payload = make_shared<TaskResponse>();
+    } else if (payloadTypeStr == "MODEL_STATE_DICT_PARAMS") {
+        payload = make_shared<ModelStateDictParams>();
     } else {
         cerr << "Unknown type " << payloadTypeStr << endl;
     }
@@ -124,6 +127,14 @@ string Message::serialize() const {
         messageProto.set_allocated_taskresponse(taskRespProto);
         break;
     }
+    case Payload::Type::MODEL_STATE_DICT_PARAMS: {
+        messageProto.set_payloadtype(payload::PayloadType::MODEL_STATE_DICT_PARAMS);
+        shared_ptr<TaskResponse> modelParams = getPayloadAs<TaskResponse>();
+        auto* modelParamsProto =
+            static_cast<payload::ModelStateDictParams*>(modelParams->serializeToProto());
+        messageProto.set_allocated_modelstatedictparams(modelParamsProto);
+        break;
+    }
     default:
         cerr << "Unknown type" << endl;
         exit(EXIT_FAILURE);
@@ -179,6 +190,10 @@ void Message::deserialize(const string& serializedData) {
                payload::PayloadType::ACKNOWLEDGEMENT) {
         const payload::Acknowledgement& ack = messageProto.acknowledgement();
         payload->deserializeFromProto(ack);
+    } else if (messageProto.payloadtype() ==
+               payload::PayloadType::MODEL_STATE_DICT_PARAMS) {
+        const payload::ModelStateDictParams& modelParams = messageProto.modelstatedictparams();
+        payload->deserializeFromProto(modelParams);
     } else {
         cerr << "Unknown or unsupported payload type for deserialization"
              << endl;

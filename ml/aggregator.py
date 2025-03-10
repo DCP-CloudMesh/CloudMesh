@@ -10,7 +10,7 @@ import zmq
 
 from networks import SimpleCNN
 from dataloader import CIFAR10Dataset, get_data_loaders
-from utils import train, val, test
+from utils import train, val, test, network
 
 from proto import payload_pb2, utility_pb2
 
@@ -42,40 +42,30 @@ def main():
     num_peers = int(input("Enter the number of peers: "))
 
     context = zmq.Context()
-    responder = context.socket(zmq.REP)
-    responder.setsockopt(zmq.LINGER, 0)
-    responder.bind("tcp://*:" + str(port_rec))
-
-    sender = context.socket(zmq.REQ)
-    sender.setsockopt(zmq.LINGER, 0)
-    sender.connect("tcp://localhost:" + str(port_send))
+    receiver = network.ZMQReciever(context, port_rec)
+    sender = network.ZMQSender(context, port_send)
 
     # recieve the models from fake_peer.py
-    print("Waiting for models...")
-    state_dicts = []
-    for i in range(num_peers):
-        sd = responder.recv()
-        responder.send_string("ACK")
+    while True:
+        print("Waiting for models...")
+        state_dicts = []
+        for i in range(num_peers):
+            payload = receiver.recieve()
+            agg_inp = payload_pb2.ModelStateDictParams()
+            agg_inp.ParseFromString(payload)
+            agg_inp = pickle.loads(agg_inp.modelStateDict)
+            state_dicts.append(agg_inp)
 
-        agg_inp = payload_pb2.AggregatorInputData()
-        agg_inp.ParseFromString(sd)
-        agg_inp = pickle.loads(agg_inp.modelStateDict)
-        state_dicts.append(agg_inp)
+        # average the models
+        print("Averaging models...")
+        avg_state_dict = nn_aggregator(state_dicts)
 
-    # average the models
-    print("Averaging models...")
-    avg_state_dict = nn_aggregator(state_dicts)
+        # send the averaged model back to fake_peer.py
+        print("Sending averaged model...")
+        tr = payload_pb2.TaskResponse()
+        tr.modelStateDict = pickle.dumps(avg_state_dict)
+        sender.send(tr.SerializeToString())
 
-    # send the averaged model back to fake_peer.py
-    print("Sending averaged model...")
-    tr = payload_pb2.TaskResponse()
-    tr.modelStateDict = pickle.dumps(avg_state_dict)
-    sender.send(tr.SerializeToString())
-
-    print("Sent averaged model, waiting for acknowledgement")
-
-    acknowledgement = sender.recv()
-    print("Acknowledgement received")
     return
 
 

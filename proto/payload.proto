@@ -26,6 +26,7 @@ message PayloadMessage {
         TaskResponse taskResponse = 9;
         Acknowledgement acknowledgement = 10;
         Registration registration = 11;
+        ModelStateDictParams modelStateDictParams = 12;
     }
 }
 
@@ -37,15 +38,17 @@ message TaskRequest {
     int32 numWorkers = 1;
     string leaderUuid = 2;
     utility.AddressTable assignedWorkers = 3;
+    int32 numEpochs = 6;
+
     oneof training_data_source {
         string glob_pattern = 4;
         string training_data_index_filename = 5;
     }
 }
 
-message TrainingData { string training_data_index_filename = 1; }
+message TrainingData { string training_data_index_filename = 1; int32 numEpochs = 2; }
 
-message AggregatorInputData { bytes modelStateDict = 1;  }
+message ModelStateDictParams { bytes modelStateDict = 1;  }
 
 message TaskResponse { bytes modelStateDict = 1; }
 

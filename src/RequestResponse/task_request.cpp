@@ -6,8 +6,8 @@ TaskRequest::TaskRequest()
     : Payload(Type::TASK_REQUEST), taskRequestType{NONE} {}
 
 TaskRequest::TaskRequest(const unsigned int numWorkers, const std::string& data,
-                         TaskRequestType type)
-    : Payload(Type::TASK_REQUEST), numWorkers{numWorkers},
+                         const unsigned int numEpochs, TaskRequestType type)
+    : Payload(Type::TASK_REQUEST), numWorkers{numWorkers}, numEpochs{numEpochs},
       taskRequestType{type} {
     if (type == GLOB_PATTERN) {
         globPattern = data;
@@ -34,6 +34,10 @@ void TaskRequest::setTrainingDataIndexFilename(const std::string& filename) {
     taskRequestType = INDEX_FILENAME;
     trainingDataIndexFilename = filename;
     globPattern.clear();
+}
+
+void TaskRequest::setNumEpochs(const unsigned int numEpochs) {
+    this->numEpochs = numEpochs;
 }
 
 void TaskRequest::writeToTrainingDataIndexFile(
@@ -109,10 +113,13 @@ vector<string> TaskRequest::getTrainingDataFiles() const {
     return trainingDataFiles;
 }
 
+unsigned int TaskRequest::getNumEpochs() const { return numEpochs; }
+
 google::protobuf::Message* TaskRequest::serializeToProto() const {
     payload::TaskRequest* proto = new payload::TaskRequest();
     proto->set_numworkers(numWorkers);
     proto->set_leaderuuid(leaderUuid);
+    proto->set_numepochs(numEpochs);
 
     if (taskRequestType == GLOB_PATTERN) {
         proto->set_glob_pattern(globPattern);
@@ -134,6 +141,7 @@ void TaskRequest::deserializeFromProto(
 
     numWorkers = proto.numworkers();
     leaderUuid = proto.leaderuuid();
+    numEpochs = proto.numepochs();
 
     if (proto.has_glob_pattern()) {
         setGlobPattern(proto.glob_pattern());

@@ -92,8 +92,11 @@ void Provider::listen() {
 
         // bug here where we are saving the file to the same file
         // server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
-
+        string indexFile = ingestTrainingData();
         server->closeConn();
+
+        // initialize ML.py with metadata
+        initializeWorkloadToML();
 
         if (taskRequest->getLeaderUuid() == uuid) {
             leaderHandleTaskRequest(requesterIpAddr);
@@ -104,43 +107,71 @@ void Provider::listen() {
 }
 
 void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
-    // Run processWorkload() in a separate thread
-    thread workloadThread(&Provider::processWorkload, this);
+    TaskResponse aggregatedResults = TaskResponse();
 
-    vector<string> followerData{};
-    while (followerData.size() < taskRequest->getAssignedWorkers().size() - 1) {
-        cout << "\nWaiting for follower peer to connect..." << endl;
-        while (!server->acceptConn());
+    for (int i = 0; i < taskRequest->getNumEpochs(); i++) {
+        vector<string> followerData{};
+        while (followerData.size() < taskRequest->getAssignedWorkers().size() - 1) {
+            cout << "\nWaiting for follower peer to connect..." << endl;
+            while (!server->acceptConn());
 
-        // get data from followers and aggregate
-        string followerMsgStr;
-        if (server->receiveFromConn(followerMsgStr) == 1) {
-            cerr << "Failed to receive data from follower" << endl;
+            // get data from followers and aggregate
+            string followerMsgStr;
+            if (server->receiveFromConn(followerMsgStr) == 1) {
+                cerr << "Failed to receive data from follower" << endl;
+                server->closeConn();
+                continue;
+            }
+
+            Message followerMsg;
+            followerMsg.deserialize(followerMsgStr);
+            shared_ptr<Payload> followerPayload = followerMsg.getPayload();
+
+            if (followerPayload->getType() != Payload::Type::TASK_RESPONSE) {
+                server->closeConn();
+                continue;
+            }
+
+            shared_ptr<TaskResponse> taskResp =
+                static_pointer_cast<TaskResponse>(followerPayload);
+
+            // append to followerData
+            followerData.push_back(taskResp->getTrainingData());
+            server->replyToConn("Received follower result.");
             server->closeConn();
-            continue;
         }
 
-        Message followerMsg;
-        followerMsg.deserialize(followerMsgStr);
-        shared_ptr<Payload> followerPayload = followerMsg.getPayload();
+        cout << endl;
 
-        if (followerPayload->getType() != Payload::Type::TASK_RESPONSE) {
-            server->closeConn();
-            continue;
+        // Aggregate model parameters and send to aggregator script
+        aggregatedResults = aggregateResults(followerData);
+        
+
+        // Send/Process aggregated results to follower peers
+        cout << "Sending aggregated results to followers..." << endl;
+        for (const auto& follower : taskRequest->getAssignedWorkers()) {
+            if (follower.first == uuid) {
+                // if the follower is the leader, skip sending
+
+                // TODO: send the aggregated state dict to ML.py 
+                // Create payload containing a ModelStateDictParams message
+                
+                processWorkload();
+                continue;
+            }
+
+            IpAddress followerIp = follower.second;
+            while (client->setupConn(followerIp, "tcp") != 0) {
+                cout << "Failed to connect to follower to send aggregated results, trying again in 5s" << endl;
+                sleep(5);
+            }
+
+            shared_ptr<TaskResponse> payload = make_shared<TaskResponse>(aggregatedResults);
+            Message msg(uuid, IpAddress(host, port), payload);
+            int code = client->sendMsg(msg.serialize(), -1);
+            cout << "Leader sent data to follower with code " << code << endl;
         }
-
-        shared_ptr<TaskResponse> taskResp =
-            static_pointer_cast<TaskResponse>(followerPayload);
-
-        // append to followerData
-        followerData.push_back(taskResp->getTrainingData());
-        server->replyToConn("Received follower result.");
-        server->closeConn();
     }
-
-    cout << endl;
-    workloadThread.join();
-    TaskResponse aggregatedResults = aggregateResults(followerData);
 
     // Send results back to requester
     // TODO: requester IP address could change
@@ -181,20 +212,36 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 }
 
 void Provider::followerHandleTaskRequest() {
-    processWorkload();
-    cout << "Waiting for connection back to leader" << endl;
-    IpAddress leaderIp =
-        taskRequest->getAssignedWorkers()[taskRequest->getLeaderUuid()];
-    // busy wait until connection is established with the leader
-    while (client->setupConn(leaderIp, "tcp") == -1) {
-        sleep(5);
-    }
 
-    // send results back to leader
-    shared_ptr<TaskResponse> payload = std::move(taskResponse);
-    Message msg(uuid, IpAddress(host, port), payload);
-    int code = client->sendMsg(msg.serialize(), -1);
-    cout << "Follower sent data to leader with code " << code << endl;
+    for (int i = 0; i < taskRequest->getNumEpochs(); i++) {
+        // run one aggregation cycle of training
+        cout << "Waiting for connection back to leader" << endl;
+        IpAddress leaderIp =
+            taskRequest->getAssignedWorkers()[taskRequest->getLeaderUuid()];
+        // busy wait until connection is established with the leader
+        while (client->setupConn(leaderIp, "tcp") == -1) {
+            sleep(5);
+        }
+
+        // send results back to leader
+        shared_ptr<TaskResponse> payload = std::move(taskResponse);
+        Message msg(uuid, IpAddress(host, port), payload);
+        int code = client->sendMsg(msg.serialize(), -1);
+        cout << "Follower sent data to leader with code " << code << endl;
+
+        if (i != taskRequest.getNumEpochs() - 1) {
+            // wait for leader to send model state dict param
+            while (!server->acceptConn());
+            // receive 
+
+            // forward model state dict param to ml 
+            processWorkload();
+        }
+    }
+}
+
+void Provider::processWorkload() {
+
 }
 
 string Provider::ingestTrainingData() {
@@ -215,15 +262,14 @@ string Provider::ingestTrainingData() {
     return trainingDataIndexFile;
 }
 
-void Provider::processWorkload() {
-    string indexFile = ingestTrainingData();
-
+void Provider::initializeWorkloadToML() {
     // send training data index file to the worker
     cout << "Working on training data index file: " << indexFile << endl;
 
     cout << "Sending training data index file to worker..." << endl;
     payload::TrainingData training_data_proto;
     training_data_proto.set_training_data_index_filename(indexFile);
+    training_data_proto.set_numepochs(taskRequest->getNumEpochs());
     string serialized_training_data;
     training_data_proto.SerializeToString(&serialized_training_data);
     ml_zmq_sender.send(serialized_training_data);
@@ -250,8 +296,8 @@ TaskResponse Provider::aggregateResults(vector<string> followerData) {
     cout << "Sending data to aggregator..." << endl;
     for (int i = 0; i < followerData.size(); i++) {
         cout << "Aggregator for loop: " << i << endl;
-        payload::AggregatorInputData* proto =
-            new payload::AggregatorInputData();
+        payload::ModelStateDictParams* proto =
+            new payload::ModelStateDictParams();
         proto->set_modelstatedict(followerData[i]);
         string serialized;
         proto->SerializeToString(&serialized);
