@@ -89,9 +89,11 @@ void Provider::listen() {
         // Download and parse training data index file from requester
         cout << "FTP: requesting index: "
              << taskRequest->getTrainingDataIndexFilename() << endl;
+        // Note: index files are downloaded to TARGET_DATA_DIR
+        server->getFileIntoDirFTP(taskRequest->getTrainingDataIndexFilename(),
+                           TARGET_DATA_DIR);
 
-        // bug here where we are saving the file to the same file
-        // server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
+        ingestTrainingData();
 
         server->closeConn();
 
@@ -199,14 +201,15 @@ void Provider::followerHandleTaskRequest() {
 
 string Provider::ingestTrainingData() {
     string trainingDataIndexFile = taskRequest->getTrainingDataIndexFilename();
-    vector<string> requiredTrainingFiles = taskRequest->getTrainingDataFiles();
+    vector<string> requiredTrainingFiles =
+        taskRequest->getTrainingDataFiles(TARGET_DATA_DIR);
     cout << "Task requires " << requiredTrainingFiles.size()
          << " training files" << endl;
     // Ensure all required training data files are present
     for (const string& filename : requiredTrainingFiles) {
-        if (!isFileWithinDataDirectory(filename)) {
+        if (!isFileWithinDirectory(filename, TARGET_DATA_DIR)) {
             cout << "FTP: requesting " << filename << endl;
-            server->getFileFTP(filename);
+            server->getFileIntoDirFTP(filename, TARGET_DATA_DIR);
         }
     }
     cout << "All training files are now present" << endl;
@@ -216,7 +219,7 @@ string Provider::ingestTrainingData() {
 }
 
 void Provider::processWorkload() {
-    string indexFile = ingestTrainingData();
+    string indexFile = taskRequest->getTrainingDataIndexFilename();
 
     // send training data index file to the worker
     cout << "Working on training data index file: " << indexFile << endl;

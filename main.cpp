@@ -10,7 +10,7 @@ using namespace std;
 // comment testing
 
 int main(int argc, char* argv[]) {
-    const char *port = "8080";
+    const char* port = "8080";
     string uuid = uuid::generate_uuid_v4();
 
     if (argc >= 2) {
@@ -37,9 +37,8 @@ int main(int argc, char* argv[]) {
     }
 
     if (requestType == "c") {
-        TaskRequest request =
-            TaskRequest(numRequestedWorkers, ".*\\.jpg$",
-                        TaskRequest::GLOB_PATTERN);
+        TaskRequest request = TaskRequest(numRequestedWorkers, ".*\\.jpg$",
+                                          TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
         r.sendTaskRequest();

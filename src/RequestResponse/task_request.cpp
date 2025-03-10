@@ -38,7 +38,10 @@ void TaskRequest::setTrainingDataIndexFilename(const std::string& filename) {
 
 void TaskRequest::writeToTrainingDataIndexFile(
     const vector<string>& trainingDataFiles) const {
-    fs::path indexFilePath = resolveDataFile(trainingDataIndexFilename);
+    fs::path indexFilePath = resolveDataFileInDirectory(trainingDataIndexFilename, SOURCE_DATA_DIR);
+
+    // Create directory if it doesn't exist
+    fs::create_directories(indexFilePath.parent_path());
 
     ofstream indexFile(indexFilePath, std::ios::out | std::ios::trunc);
     if (!indexFile) {
@@ -89,14 +92,15 @@ std::string TaskRequest::getTrainingDataIndexFilename() const {
     return (taskRequestType == INDEX_FILENAME) ? trainingDataIndexFilename : "";
 }
 
-vector<string> TaskRequest::getTrainingDataFiles() const {
+vector<string> TaskRequest::getTrainingDataFiles(string dir) const {
     vector<string> trainingDataFiles;
 
     if (taskRequestType == GLOB_PATTERN) {
         regex pattern = convertToRegexPattern(globPattern);
-        trainingDataFiles = getMatchingDataFiles(pattern, DATA_DIR);
+        trainingDataFiles = getMatchingDataFiles(pattern, dir);
     } else if (taskRequestType == INDEX_FILENAME) {
-        ifstream indexFile(resolveDataFile(trainingDataIndexFilename));
+        ifstream indexFile(
+            resolveDataFileInDirectory(trainingDataIndexFilename, dir));
         if (indexFile.is_open()) {
             string line;
             while (getline(indexFile, line)) {

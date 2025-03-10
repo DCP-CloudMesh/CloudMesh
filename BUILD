@@ -27,7 +27,7 @@ cc_library(
 cc_library(
     name = "src_files",
     srcs = glob(["src/**/*.cpp"]),
-    hdrs = glob(["src/**/*.h"]),
+    hdrs = glob(["src/**/*.h"], allow_empty = True),
     visibility = ["//visibility:public"],
     deps = [
         ":include_files",
