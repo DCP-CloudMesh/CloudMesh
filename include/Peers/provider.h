@@ -20,6 +20,8 @@ class Provider : public Peer {
     std::unique_ptr<TaskRequest> taskRequest;
     std::unique_ptr<TaskResponse> taskResponse;
 
+    std::string currentAggregatedModelStateDict;
+
     ZMQSender ml_zmq_sender;
     ZMQReceiver ml_zmq_receiver;
 
@@ -35,8 +37,9 @@ class Provider : public Peer {
     void leaderHandleTaskRequest(const IpAddress& requesterIpAddr);
     void followerHandleTaskRequest();
     void processData();
-    void initializeWorkloadToML(); // worker function to manipulate the TaskRequest
-    void processWorkload(); // 
+    void
+    initializeWorkloadToML(); // worker function to manipulate the TaskRequest
+    void processWorkload();   //
 
     std::string
     ingestTrainingData(); // worker function to load training data into memory

@@ -66,6 +66,8 @@ def main():
         tr.modelStateDict = pickle.dumps(avg_state_dict)
         sender.send(tr.SerializeToString())
 
+    # TODO: send final response
+
     return
 
 

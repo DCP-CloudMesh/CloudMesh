@@ -89,13 +89,13 @@ def main():
         train(model, device, train_loader, optimizer, criterion, epoch)
         print("validating")
         val(model, device, val_loader, criterion, epoch, data_path)
-        
+
         # non compressed, non protobuf sending weights
         pickled_weights = pickle.dumps(model.state_dict())
         task_response = payload_pb2.TaskResponse()
         task_response.modelStateDict = pickled_weights
         sender.send(task_response.SerializeToString())
-        
+
         # recieve the updated message
         payload = receiver.receive()
         agg_inp = payload_pb2.ModelStateDictParams()
@@ -104,7 +104,7 @@ def main():
 
         # update current model with the averaged state dict
         model.load_state_dict(averaged_state_dict)
-    
+
     # Test the model
     test(model, device, test_loader, criterion, data_path)
 
@@ -116,6 +116,8 @@ def main():
     print("Total Time: ", end_time - start_time)
     print("Start Time: ", start_time)
     print("End Time: ", end_time)
+
+    # TODO: send final response
 
     return
 

@@ -17,7 +17,7 @@ using namespace std;
 
 Provider::Provider(const char* port, string uuid)
     : Peer(uuid), ml_zmq_sender(), ml_zmq_receiver(), aggregator_zmq_sender(),
-      aggregator_zmq_receiver() {
+      aggregator_zmq_receiver(), currentAggregatedModelStateDict("") {
     isBusy = false;
     isLocalBootstrap = false;
 
@@ -55,14 +55,15 @@ void Provider::listen() {
 
         // receive task request object from client
         string requesterData;
-        if(server->receiveFromConn(requesterData) == 1) {
+        if (server->receiveFromConn(requesterData) == 1) {
             server->closeConn();
             continue;
         }
 
         Message requesterMsg;
         requesterMsg.deserialize(requesterData);
-        if (requesterMsg.getPayload()->getType() != Payload::Type::TASK_REQUEST) {
+        if (requesterMsg.getPayload()->getType() !=
+            Payload::Type::TASK_REQUEST) {
             server->closeConn();
             continue;
         }
@@ -111,9 +112,11 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 
     for (int i = 0; i < taskRequest->getNumEpochs(); i++) {
         vector<string> followerData{};
-        while (followerData.size() < taskRequest->getAssignedWorkers().size() - 1) {
+        while (followerData.size() <
+               taskRequest->getAssignedWorkers().size() - 1) {
             cout << "\nWaiting for follower peer to connect..." << endl;
-            while (!server->acceptConn());
+            while (!server->acceptConn())
+                ;
 
             // get data from followers and aggregate
             string followerMsgStr;
@@ -145,7 +148,6 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 
         // Aggregate model parameters and send to aggregator script
         aggregatedResults = aggregateResults(followerData);
-        
 
         // Send/Process aggregated results to follower peers
         cout << "Sending aggregated results to followers..." << endl;
@@ -153,20 +155,24 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
             if (follower.first == uuid) {
                 // if the follower is the leader, skip sending
 
-                // TODO: send the aggregated state dict to ML.py 
+                // TODO: send the aggregated state dict to ML.py
                 // Create payload containing a ModelStateDictParams message
-                
-                processWorkload();
+                currentAggregatedModelStateDict =
+                    aggregatedResults.getTrainingData();
+                thread workloadThread(&processWorkload(), this);
                 continue;
             }
 
             IpAddress followerIp = follower.second;
             while (client->setupConn(followerIp, "tcp") != 0) {
-                cout << "Failed to connect to follower to send aggregated results, trying again in 5s" << endl;
+                cout << "Failed to connect to follower to send aggregated "
+                        "results, trying again in 5s"
+                     << endl;
                 sleep(5);
             }
 
-            shared_ptr<TaskResponse> payload = make_shared<TaskResponse>(aggregatedResults);
+            shared_ptr<TaskResponse> payload =
+                make_shared<TaskResponse>(aggregatedResults);
             Message msg(uuid, IpAddress(host, port), payload);
             int code = client->sendMsg(msg.serialize(), -1);
             cout << "Leader sent data to follower with code " << code << endl;
@@ -182,7 +188,8 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     // busy wait until connection is established
     while (client->setupConn(requesterIpAddr, "tcp") != 0) {
         constexpr int retry = 5;
-        cout << "Failed to connect to requester server, trying again in " << retry << "s" << endl;
+        cout << "Failed to connect to requester server, trying again in "
+             << retry << "s" << endl;
         sleep(retry);
     }
     cout << "Connected to requester server" << endl;
@@ -193,7 +200,8 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     }
 
     cout << "Sent results to requester. Waiting for acknowledgement" << endl;
-    while (!server->acceptConn());
+    while (!server->acceptConn())
+        ;
 
     while (true) {
         // receive response from requester
@@ -231,17 +239,14 @@ void Provider::followerHandleTaskRequest() {
 
         if (i != taskRequest.getNumEpochs() - 1) {
             // wait for leader to send model state dict param
-            while (!server->acceptConn());
-            // receive 
+            while (!server->acceptConn())
+                ;
+            // receive
 
-            // forward model state dict param to ml 
-            processWorkload();
+            // forward model state dict param to ml
+            thread workloadThread(&processWorkload(), this);
         }
     }
-}
-
-void Provider::processWorkload() {
-
 }
 
 string Provider::ingestTrainingData() {
@@ -262,10 +267,30 @@ string Provider::ingestTrainingData() {
     return trainingDataIndexFile;
 }
 
+void Provider::processWorkload() {
+    payload::ModelStateDictParams modelStateDictParamsProto;
+    modelStateDictParamsProto.set_modelstatedict(
+        currentAggregatedModelStateDict);
+    string serialized_modelStateDictParamsProto;
+    modelStateDictParamsProto.SerializeToString(
+        &serialized_modelStateDictParamsProto);
+    // TODO: send model state dict param to ML.py
+    ml_zmq_sender.send(serialized_modelStateDictParamsProto);
+
+    cout << "Waiting for processed data..." << endl;
+    auto rcvdData = ml_zmq_receiver.receive();
+    cout << "Received processed data" << endl;
+
+    // Parse received task response proto and populate TaskResponse object
+    payload::TaskResponse task_response_proto;
+    task_response_proto.ParseFromString(rcvdData);
+    taskResponse =
+        make_unique<TaskResponse>(task_response_proto.modelstatedict());
+    cout << "Completed assigned workload" << endl;
+}
+
 void Provider::initializeWorkloadToML() {
     // send training data index file to the worker
-    cout << "Working on training data index file: " << indexFile << endl;
-
     cout << "Sending training data index file to worker..." << endl;
     payload::TrainingData training_data_proto;
     training_data_proto.set_training_data_index_filename(indexFile);
@@ -281,7 +306,8 @@ void Provider::initializeWorkloadToML() {
     // Parse received task response proto and populate TaskResponse object
     payload::TaskResponse task_response_proto;
     task_response_proto.ParseFromString(rcvdData);
-    taskResponse = make_unique<TaskResponse>(task_response_proto.modelstatedict());
+    taskResponse =
+        make_unique<TaskResponse>(task_response_proto.modelstatedict());
     cout << "Completed assigned workload" << endl;
 }
 
