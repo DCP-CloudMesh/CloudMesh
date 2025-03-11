@@ -11,6 +11,7 @@ enum PayloadType {
     DISCOVERY_RESPONSE = 3;
     TASK_REQUEST = 4;
     TASK_RESPONSE = 5;
+    MODEL_STATE_DICT_PARAMS = 6;
 }
 
 message PayloadMessage {

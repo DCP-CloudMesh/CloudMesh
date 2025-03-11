@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 
     if (requestType == "c") {
         TaskRequest request =
-            TaskRequest(numRequestedWorkers, ".*\\.jpg$", numEpochs
+            TaskRequest(numRequestedWorkers, ".*\\.jpg$", numEpochs,
                         TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers

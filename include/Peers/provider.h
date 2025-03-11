@@ -38,7 +38,7 @@ class Provider : public Peer {
     void followerHandleTaskRequest();
     void processData();
     void
-    initializeWorkloadToML(); // worker function to manipulate the TaskRequest
+    initializeWorkloadToML(const std::string& indexFile); // worker function to manipulate the TaskRequest
     void processWorkload();   //
 
     std::string
