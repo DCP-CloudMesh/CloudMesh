@@ -62,8 +62,6 @@ static std::uniform_int_distribution<> dis2(8, 11);
 std::string generate_uuid_v4();
 } // namespace uuid
 
-std::string startNgrokForwarding(unsigned short port);
-
 std::string vectorToString(std::vector<int> v);
 
 int FTP_create_socket_client(int port, const char* addr);

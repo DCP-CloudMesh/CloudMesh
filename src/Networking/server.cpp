@@ -7,14 +7,6 @@ Server::Server(const char* host, const char* port, const char* type)
 
 void Server::setupServer() {
 #if defined(NOLOCAL)
-    // string response = startNgrokForwarding(stoi(PORT));
-    // // update public IP address
-    // response = response.substr(6);
-    // string ip =
-    //     response.substr(0, response.find(":")); // ignore "tcp://" prefix
-    // unsigned short port =
-    //     static_cast<unsigned short>(stoi(response.substr(ip.length() + 1)));
-    // publicIP = IpAddress{ip, port};
     publicIP = IpAddress{HOST, static_cast<unsigned short>(stoi(PORT))};
 #elif defined(LOCAL)
     publicIP = IpAddress{HOST, static_cast<unsigned short>(stoi(PORT))};

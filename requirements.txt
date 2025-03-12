@@ -1,9 +1,6 @@
 certifi==2023.11.17
 chardet==4.0.0
 idna==2.10
-ngrok==0.12.0
-ngrok-api==0.10.0
-pyngrok==7.0.0
 python-dotenv==1.0.0
 PyYAML==6.0.1
 requests==2.25.1

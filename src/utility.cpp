@@ -81,44 +81,6 @@ string uuid::generate_uuid_v4() {
     return ss.str();
 }
 
-string startNgrokForwarding(unsigned short port) {
-    const string command =
-        "python3 ./src/Networking/ngrok_ip.py " + to_string(port);
-
-    // start ngrok
-    string ngrok_restart =
-        "./src/Networking/ngrok_restart.sh " + to_string(port) + " &";
-    system(ngrok_restart.c_str());
-
-    // Open a pipe to capture the output
-    FILE* pipe = popen(command.c_str(), "r");
-    if (!pipe) {
-        cerr << "Error opening pipe." << endl;
-        return "";
-    }
-
-    // read
-    char buffer[256];
-    string result = "";
-    // while (fgets(buffer, 256, pipe) != nullptr) {
-    //     result += buffer;
-    // }
-
-    // // Close the pipe
-    // pclose(pipe);
-    // return result;
-    while (!feof(pipe)) {
-        if (fgets(buffer, 256, pipe) != nullptr)
-            result += buffer;
-    }
-
-    // Close the pipe
-    pclose(pipe);
-    return result;
-}
-
-void close_ngrok_forwarding() { system("pkill ngrok"); }
-
 string vectorToString(vector<int> vec) {
     stringstream ss;
     for (unsigned int i = 0; i < vec.size(); i++) {
