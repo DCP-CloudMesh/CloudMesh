@@ -13,7 +13,7 @@ BootstrapNode::~BootstrapNode() {}
 
 const char* BootstrapNode::getServerIpAddress() {
 #if defined(NOLOCAL)
-    return "8.tcp.ngrok.io";
+    return "25.8.164.169";
 #else
     return "127.0.0.1";
 #endif
@@ -21,7 +21,8 @@ const char* BootstrapNode::getServerIpAddress() {
 
 const char* BootstrapNode::getServerPort() {
 #if defined(NOLOCAL)
-    return "12701";
+    // return "12701";
+    return "8080";
 #else
     return "8080";
 #endif
@@ -50,7 +51,9 @@ AddressTable BootstrapNode::discoverPeers(const string& peerUuid,
 void BootstrapNode::listen() {
     while (true) {
         cout << "Waiting for peer to connect..." << endl;
-        if (!server->acceptConn()) {
+        IpAddress senderIpAddr;
+
+        if (!server->acceptConn(senderIpAddr)) {
             continue;
         }
 
@@ -66,7 +69,6 @@ void BootstrapNode::listen() {
         Message msg;
         msg.deserialize(serializedData);
         string senderUuid = msg.getSenderUuid();
-        IpAddress senderIpAddr = msg.getSenderIpAddr();
         shared_ptr<Payload> payload = msg.getPayload();
 
         switch (payload->getType()) {

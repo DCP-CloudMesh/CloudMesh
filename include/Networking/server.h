@@ -27,6 +27,7 @@ class Server {
     ~Server();
     void setupServer();                                         // prepare server for connection
     bool acceptConn();                                          // blocking
+    bool acceptConn(IpAddress& addr);                           // blocking
     int receiveFromConn(std::string& msg, int num_retries = 0); // process the active conn
     void replyToConn(std::string message);                      // reply to the active conn
     void getFileFTP(std::string filename);                      // retrieve remote file

@@ -7,14 +7,15 @@ Server::Server(const char* host, const char* port, const char* type)
 
 void Server::setupServer() {
 #if defined(NOLOCAL)
-    string response = startNgrokForwarding(stoi(PORT));
-    // update public IP address
-    response = response.substr(6);
-    string ip =
-        response.substr(0, response.find(":")); // ignore "tcp://" prefix
-    unsigned short port =
-        static_cast<unsigned short>(stoi(response.substr(ip.length() + 1)));
-    publicIP = IpAddress{ip, port};
+    // string response = startNgrokForwarding(stoi(PORT));
+    // // update public IP address
+    // response = response.substr(6);
+    // string ip =
+    //     response.substr(0, response.find(":")); // ignore "tcp://" prefix
+    // unsigned short port =
+    //     static_cast<unsigned short>(stoi(response.substr(ip.length() + 1)));
+    // publicIP = IpAddress{ip, port};
+    publicIP = IpAddress{HOST, static_cast<unsigned short>(stoi(PORT))};
 #elif defined(LOCAL)
     publicIP = IpAddress{HOST, static_cast<unsigned short>(stoi(PORT))};
 #else
@@ -53,6 +54,11 @@ void Server::setupServer() {
 }
 
 bool Server::acceptConn() {
+    IpAddress addr;
+    return acceptConn(addr);
+}
+
+bool Server::acceptConn(IpAddress& addr) {
     sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     activeConn = accept(server, (struct sockaddr*)&clientAddr, &clientAddrLen);
@@ -63,7 +69,13 @@ bool Server::acceptConn() {
         return false;
     }
 
-    cout << "Client connected" << endl;
+    // Get address of incoming connection
+    char addrBuffer[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET,  &clientAddr.sin_addr, addrBuffer, sizeof(addrBuffer));
+    addr.host = string(addrBuffer);
+    addr.port = htons(clientAddr.sin_port);
+
+    cout << "Client connected from " << addr.host << ":" << addr.port << endl;
     return true;
 }
 
