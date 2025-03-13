@@ -29,6 +29,11 @@ IpAddress deserializeIpAddressFromProto(const utility::IpAddress& proto) {
     return ip;
 }
 
+// overloaded output operator for IpAddress
+std::ostream& operator<<(std::ostream& os, const IpAddress& ip) {
+    return os << ip.host << ":" << ip.port;
+}
+
 // converts a AddressTable object to a utility::AddressTable proto object
 utility::AddressTable* serializeAddressTable(const AddressTable& addressTable) {
     utility::AddressTable* at = new utility::AddressTable();

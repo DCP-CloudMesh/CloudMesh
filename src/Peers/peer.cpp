@@ -19,11 +19,21 @@ Peer::Peer(const string& uuid)
     client = new Client();
 }
 
-void Peer::setupServer(const char* host, const char* port) {
+void Peer::setPublicIp(const char* host, const char* port) {
     this->host = host;
     this->port = port;
+}
+
+void Peer::setupServer(const char* host, const char* port) {
+    setPublicIp(host, port);
     const char* type = "tcp";
-    // initialize server
+
+    // Tear down existing server
+    if (server != nullptr) {
+        delete server;
+    }
+
+    // Initialize server
     server = new Server(host, port, type);
     server->setupServer();
 }
@@ -31,4 +41,6 @@ void Peer::setupServer(const char* host, const char* port) {
 Peer::~Peer() {
     delete client;
     delete server;
+    client = nullptr;
+    server = nullptr;
 }

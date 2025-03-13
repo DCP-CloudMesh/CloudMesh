@@ -3,6 +3,7 @@
 #include "../../include/RequestResponse/acknowledgement.h"
 #include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/registration.h"
+#include "../../include/RequestResponse/registration_response.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/utility.h"
 #include "proto/payload.pb.h"
@@ -44,6 +45,29 @@ void Provider::registerWithBootstrap() {
     Message msg(uuid, IpAddress(host, port), payload);
 
     client->sendMsg(msg.serialize(), -1);
+
+    // Get own public address from bootstrap node
+    while (!server->acceptConn());
+
+    string registrationRespStr;
+    if (server->receiveFromConn(registrationRespStr) == 1) {
+        cerr << "Failed to receive registration response" << endl;
+        server->closeConn();
+        exit(1);
+    }
+
+    Message respMsg;
+    respMsg.deserialize(registrationRespStr);
+    shared_ptr<Payload> respPayload = msg.getPayload();
+    if (respPayload->getType() == Payload::Type::REGISTRATION_RESPONSE) {
+        shared_ptr<RegistrationResponse> rr =
+            static_pointer_cast<RegistrationResponse>(respPayload);
+        IpAddress publicIp = rr->getPublicIpAddress();
+        cout << "Public IP = " << publicIp.host << ":" << publicIp.port << endl;
+        server->replyToConn("Obtained public ip address");
+        setPublicIp(publicIp.host.c_str(), to_string(publicIp.port).c_str());
+    }
+    server->closeConn();
 }
 
 void Provider::listen() {

@@ -3,29 +3,25 @@
 #include "../../include/RequestResponse/discovery_response.h"
 #include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/registration.h"
+#include "../../include/RequestResponse/registration_response.h"
 
 using namespace std;
 
 BootstrapNode::BootstrapNode(const char* port, string uuid) : Peer(uuid) {
-    setupServer("127.0.0.1", port);
+    setupServer(getServerIpAddress(), port);
 }
 BootstrapNode::~BootstrapNode() {}
 
 const char* BootstrapNode::getServerIpAddress() {
 #if defined(NOLOCAL)
-    return "25.8.164.169";
+    return "25.37.40.237";
 #else
     return "127.0.0.1";
 #endif
 }
 
 const char* BootstrapNode::getServerPort() {
-#if defined(NOLOCAL)
-    // return "12701";
     return "8080";
-#else
-    return "8080";
-#endif
 }
 
 void BootstrapNode::registerPeer(const string& peerUuid,
@@ -68,6 +64,7 @@ void BootstrapNode::listen() {
         string replyPrefix = "Bootstrap Node (" + uuid + ") - ";
         Message msg;
         msg.deserialize(serializedData);
+        senderIpAddr.port = msg.getSenderIpAddr().port;
         string senderUuid = msg.getSenderUuid();
         shared_ptr<Payload> payload = msg.getPayload();
 
@@ -76,6 +73,14 @@ void BootstrapNode::listen() {
             server->replyToConn(replyPrefix + "received registration request");
             registerPeer(senderUuid, senderIpAddr);
             server->replyToConn("\nRegistration successful");
+
+            cout << "received registration request from " << senderIpAddr << endl;
+            // Create response
+            client->setupConn(senderIpAddr, "tcp");
+            shared_ptr<Payload> payload =
+                make_shared<RegistrationResponse>(senderIpAddr);
+            Message response(uuid, IpAddress(host, port), payload);;
+            client->sendMsg(response.serialize());
             break;
         }
         case Payload::Type::DISCOVERY_REQUEST: {
@@ -88,8 +93,7 @@ void BootstrapNode::listen() {
             server->replyToConn("\nFound " + to_string(providers.size()) +
                                 " provider(s)");
             // Create response
-            client->setupConn(senderIpAddr.host.c_str(),
-                              to_string(senderIpAddr.port).c_str(), "tcp");
+            client->setupConn(senderIpAddr, "tcp");
             shared_ptr<Payload> payload =
                 make_shared<DiscoveryResponse>(providers);
             Message response(uuid, IpAddress(host, port), payload);

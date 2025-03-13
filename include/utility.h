@@ -43,6 +43,8 @@ struct IpAddress {
     IpAddress() {}
     IpAddress(const std::string& host, const unsigned short port);
     IpAddress(const char* host, const char* port);
+
+    friend std::ostream& operator<<(std::ostream& os, const IpAddress& ip);
 };
 
 utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress);
