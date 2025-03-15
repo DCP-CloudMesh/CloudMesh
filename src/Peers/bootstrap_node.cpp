@@ -47,9 +47,9 @@ AddressTable BootstrapNode::discoverPeers(const string& peerUuid,
 void BootstrapNode::listen() {
     while (true) {
         cout << "Waiting for peer to connect..." << endl;
-        IpAddress senderIpAddr;
+        IpAddress senderClientIpAddr;
 
-        if (!server->acceptConn(senderIpAddr)) {
+        if (!server->acceptConn(senderClientIpAddr)) {
             continue;
         }
 
@@ -60,25 +60,29 @@ void BootstrapNode::listen() {
             continue;
         }
 
-        // process this request
-        string replyPrefix = "Bootstrap Node (" + uuid + ") - ";
+        // Deserialize request
         Message msg;
         msg.deserialize(serializedData);
-        senderIpAddr.port = msg.getSenderIpAddr().port;
+
+        IpAddress senderServerIpAddr = senderClientIpAddr;
+        // Use server port specified in message (different from client port)
+        senderServerIpAddr.port = msg.getSenderIpAddr().port;
+
         string senderUuid = msg.getSenderUuid();
         shared_ptr<Payload> payload = msg.getPayload();
 
+        string replyPrefix = "Bootstrap Node (" + uuid + ") - ";
         switch (payload->getType()) {
         case Payload::Type::REGISTRATION: {
             server->replyToConn(replyPrefix + "received registration request");
-            registerPeer(senderUuid, senderIpAddr);
+            registerPeer(senderUuid, senderServerIpAddr);
             server->replyToConn("\nRegistration successful");
 
-            cout << "received registration request from " << senderIpAddr << endl;
+            cout << "received registration request from " << senderServerIpAddr.host << endl;
             // Create response
-            client->setupConn(senderIpAddr, "tcp");
+            client->setupConn(senderServerIpAddr, "tcp");
             shared_ptr<Payload> payload =
-                make_shared<RegistrationResponse>(senderIpAddr);
+                make_shared<RegistrationResponse>(senderServerIpAddr);
             Message response(uuid, IpAddress(host, port), payload);;
             client->sendMsg(response.serialize());
             break;
@@ -93,7 +97,7 @@ void BootstrapNode::listen() {
             server->replyToConn("\nFound " + to_string(providers.size()) +
                                 " provider(s)");
             // Create response
-            client->setupConn(senderIpAddr, "tcp");
+            client->setupConn(senderServerIpAddr, "tcp");
             shared_ptr<Payload> payload =
                 make_shared<DiscoveryResponse>(providers);
             Message response(uuid, IpAddress(host, port), payload);
