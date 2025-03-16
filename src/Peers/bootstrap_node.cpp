@@ -1,3 +1,5 @@
+#include <cstdlib> 
+
 #include "../../include/Peers/bootstrap_node.h"
 #include "../../include/RequestResponse/discovery_request.h"
 #include "../../include/RequestResponse/discovery_response.h"
@@ -14,7 +16,16 @@ BootstrapNode::~BootstrapNode() {}
 
 IpAddress BootstrapNode::getServerIpAddr() {
 #if defined(NOLOCAL)
-    return IpAddress("25.8.164.169", 8080);
+    const char* host = getenv("BOOTSTRAP_HOST");
+    const char* port = getenv("BOOTSTRAP_PORT");
+    if (host == nullptr) {
+        cerr << "BOOTSTRAP_HOST not set in environment" << endl;
+        exit(1);
+    }
+    if (port == nullptr) {
+        port = "8080";
+    }
+    return IpAddress(string(host), stoul(string(port)));
 #else
     return IpAddress("127.0.0.1", 8080);
 #endif

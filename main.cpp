@@ -18,8 +18,9 @@ int main(int argc, char* argv[]) {
     }
 
 #if defined(BOOTSTRAP)
-    cout << "Running as bootstrap node on port "
-         << BootstrapNode::getServerIpAddr().port << "." << endl;
+    unsigned int bootstrapPort = BootstrapNode::getServerIpAddr().port;
+    cout << "Running as bootstrap node on port " << bootstrapPort << "."
+         << endl;
     BootstrapNode b = BootstrapNode(uuid);
     b.listen();
 #elif defined(PROVIDER)
