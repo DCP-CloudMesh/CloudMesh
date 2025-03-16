@@ -54,6 +54,10 @@ void Requester::waitForDiscoveryResponse() {
     if (payload->getType() == Payload::Type::DISCOVERY_RESPONSE) {
         shared_ptr<DiscoveryResponse> dr =
             static_pointer_cast<DiscoveryResponse>(payload);
+        IpAddress publicIp = dr->getCallerPublicIpAddress();
+        cout << "Public Ip = " << publicIp << endl;
+        setPublicIp(publicIp.host.c_str(), to_string(publicIp.port).c_str());
+
         AddressTable availablePeers = dr->getAvailablePeers();
         for (auto& it : availablePeers) {
             providerPeers[it.first] = it.second;

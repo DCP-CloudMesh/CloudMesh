@@ -6,13 +6,13 @@
 #include <string>
 
 class RegistrationResponse : public Payload {
-    IpAddress addr;
+    IpAddress callerAddr;
 
   public:
     RegistrationResponse();
-    RegistrationResponse(const IpAddress& addr);
+    RegistrationResponse(const IpAddress& callerAddr);
 
-    IpAddress getPublicIpAddress() const;
+    IpAddress getCallerPublicIpAddress() const;
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(
         const google::protobuf::Message& protoMessage) override;

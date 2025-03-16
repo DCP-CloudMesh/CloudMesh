@@ -62,8 +62,8 @@ void Provider::registerWithBootstrap() {
     if (respPayload->getType() == Payload::Type::REGISTRATION_RESPONSE) {
         shared_ptr<RegistrationResponse> rr =
             static_pointer_cast<RegistrationResponse>(respPayload);
-        IpAddress publicIp = rr->getPublicIpAddress();
-        cout << "Public IP = " << publicIp.host << ":" << publicIp.port << endl;
+        IpAddress publicIp = rr->getCallerPublicIpAddress();
+        cout << "Public IP = " << publicIp << endl;
         server->replyToConn("Obtained public ip address");
         setPublicIp(publicIp.host.c_str(), to_string(publicIp.port).c_str());
     }

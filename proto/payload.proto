@@ -31,7 +31,10 @@ message PayloadMessage {
     }
 }
 
-message DiscoveryResponse { utility.AddressTable availablePeers = 1; }
+message DiscoveryResponse {
+    utility.IpAddress callerAddr = 1;
+    utility.AddressTable availablePeers = 2;
+}
 
 message DiscoveryRequest { int32 peersRequested = 1; }
 
@@ -55,4 +58,4 @@ message Acknowledgement {}
 
 message Registration {}
 
-message RegistrationResponse { utility.IpAddress addr = 1; }
+message RegistrationResponse { utility.IpAddress callerAddr = 1; }

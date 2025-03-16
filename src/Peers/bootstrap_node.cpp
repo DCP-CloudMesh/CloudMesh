@@ -14,7 +14,7 @@ BootstrapNode::~BootstrapNode() {}
 
 const char* BootstrapNode::getServerIpAddress() {
 #if defined(NOLOCAL)
-    return "25.37.40.237";
+    return "25.8.164.169";
 #else
     return "127.0.0.1";
 #endif
@@ -75,10 +75,9 @@ void BootstrapNode::listen() {
         switch (payload->getType()) {
         case Payload::Type::REGISTRATION: {
             server->replyToConn(replyPrefix + "received registration request");
+            cout << "received registration request from " << senderServerIpAddr.host << endl;
             registerPeer(senderUuid, senderServerIpAddr);
             server->replyToConn("\nRegistration successful");
-
-            cout << "received registration request from " << senderServerIpAddr.host << endl;
             // Create response
             client->setupConn(senderServerIpAddr, "tcp");
             shared_ptr<Payload> payload =
@@ -99,7 +98,7 @@ void BootstrapNode::listen() {
             // Create response
             client->setupConn(senderServerIpAddr, "tcp");
             shared_ptr<Payload> payload =
-                make_shared<DiscoveryResponse>(providers);
+                make_shared<DiscoveryResponse>(senderServerIpAddr, providers);
             Message response(uuid, IpAddress(host, port), payload);
             client->sendMsg(response.serialize());
             break;
