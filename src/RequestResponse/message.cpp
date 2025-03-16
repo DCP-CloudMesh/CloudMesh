@@ -161,7 +161,7 @@ void Message::deserialize(const string& serializedData) {
         deserializeIpAddressFromProto(messageProto.senderipaddress());
 
     cout << "Deserializing message with id: " << uuid << " from " << senderUuid
-         << " at " << senderIpAddr.host << ":" << senderIpAddr.port << endl;
+         << " at " << senderIpAddr << endl;
 
     string payloadType = payload::PayloadType_Name(messageProto.payloadtype());
     initializePayload(payloadType);

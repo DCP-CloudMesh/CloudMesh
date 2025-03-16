@@ -10,10 +10,8 @@
 #include <unistd.h>
 
 class Server {
-    const char* HOST;
-    const char* PORT;
+    IpAddress publicIp;
     const char* CONNTYPE;
-    IpAddress publicIP;
     int server = -1;     // stores the current running server id
     int activeConn = -1; // stores the current active connection id
 
@@ -24,7 +22,7 @@ class Server {
     void closeSocket();
 
   public:
-    Server(const char* host, const char* port, const char* type);
+    Server(const IpAddress& addr, const char* type);
     ~Server();
     void setupServer();                                         // prepare server for connection
     bool acceptConn();                                          // blocking

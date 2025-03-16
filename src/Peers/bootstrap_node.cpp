@@ -7,28 +7,23 @@
 
 using namespace std;
 
-BootstrapNode::BootstrapNode(const char* port, string uuid) : Peer(uuid) {
-    setupServer(getServerIpAddress(), port);
+BootstrapNode::BootstrapNode(string uuid) : Peer(uuid) {
+    setupServer(getServerIpAddr());
 }
 BootstrapNode::~BootstrapNode() {}
 
-const char* BootstrapNode::getServerIpAddress() {
+IpAddress BootstrapNode::getServerIpAddr() {
 #if defined(NOLOCAL)
-    return "25.8.164.169";
+    return IpAddress("25.8.164.169", 8080);
 #else
-    return "127.0.0.1";
+    return IpAddress("127.0.0.1", 8080);
 #endif
-}
-
-const char* BootstrapNode::getServerPort() {
-    return "8080";
 }
 
 void BootstrapNode::registerPeer(const string& peerUuid,
                                  const IpAddress& peerIpAddr) {
     providerPeers[peerUuid] = peerIpAddr;
-    cout << "Registered peer " << peerUuid << " (" << peerIpAddr.host << ":"
-         << peerIpAddr.port << ")" << endl;
+    cout << "Registered peer " << peerUuid << " (" << peerIpAddr << ")" << endl;
 }
 
 AddressTable BootstrapNode::discoverPeers(const string& peerUuid,
@@ -82,7 +77,7 @@ void BootstrapNode::listen() {
             client->setupConn(senderServerIpAddr, "tcp");
             shared_ptr<Payload> payload =
                 make_shared<RegistrationResponse>(senderServerIpAddr);
-            Message response(uuid, IpAddress(host, port), payload);;
+            Message response(uuid, publicIp, payload);;
             client->sendMsg(response.serialize());
             break;
         }
@@ -99,7 +94,7 @@ void BootstrapNode::listen() {
             client->setupConn(senderServerIpAddr, "tcp");
             shared_ptr<Payload> payload =
                 make_shared<DiscoveryResponse>(senderServerIpAddr, providers);
-            Message response(uuid, IpAddress(host, port), payload);
+            Message response(uuid, publicIp, payload);
             client->sendMsg(response.serialize());
             break;
         }

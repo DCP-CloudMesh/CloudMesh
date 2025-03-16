@@ -6,8 +6,10 @@ Client::Client() : CONN{-1} {}
 
 Client::~Client() {}
 
-int Client::setupConn(const char* HOST, const char* PORT,
-                      const char* CONNTYPE) {
+int Client::setupConn(const IpAddress& ipAddress, const char* CONNTYPE) {
+    const char* HOST = ipAddress.host.c_str();
+    const char* PORT = to_string(ipAddress.port).c_str();
+
     addrinfo hints, *serverInfo;
 
     memset(&hints, 0, sizeof hints);
@@ -43,11 +45,6 @@ int Client::setupConn(const char* HOST, const char* PORT,
         return -1;
     }
     return 0;
-}
-
-int Client::setupConn(const IpAddress& ipAddress, const char* CONNTYPE) {
-    return setupConn(ipAddress.host.c_str(), to_string(ipAddress.port).c_str(),
-                     CONNTYPE);
 }
 
 ssize_t Client::sendAllBytes(const char* buffer, size_t length, int flags,

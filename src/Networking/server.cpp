@@ -2,19 +2,16 @@
 
 using namespace std;
 
-Server::Server(const char* host, const char* port, const char* type)
-    : HOST{host}, PORT{port}, CONNTYPE{type}, server{-1} {}
+Server::Server(const IpAddress& addr, const char* type)
+    : publicIp{addr}, CONNTYPE{type}, server{-1} {}
 
 void Server::setupServer() {
-#if defined(NOLOCAL) || defined(LOCAL)
-    publicIP = IpAddress{HOST, static_cast<unsigned short>(stoi(PORT))};
-#else
+#if !defined(NOLOCAL) && !defined(LOCAL)
     cerr << "Please specify either --local or --nolocal flag." << endl;
     exit(1);
 #endif
 
-    cout << "Initializing server on " << publicIP.host << ":" << publicIP.port
-         << endl;
+    cout << "Initializing server on " << publicIp << endl;
 
     server = socket(AF_INET, SOCK_STREAM, 0);
     if (server == -1) {
@@ -24,7 +21,7 @@ void Server::setupServer() {
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(stoi(PORT));
+    serverAddr.sin_port = htons(publicIp.port);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (::bind(server, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) ==
@@ -64,7 +61,7 @@ bool Server::acceptConn(IpAddress& clientAddr) {
     clientAddr.host = string(addrBuffer);
     clientAddr.port = htons(addr.sin_port);
 
-    cout << "Client connected from " << clientAddr.host << ":" << clientAddr.port << endl;
+    cout << "Client connected from " << clientAddr << endl;
     return true;
 }
 
@@ -132,7 +129,7 @@ void Server::getFileFTP(string filename) {
     FILE* fp;
     recv(activeConn, port, FTP_BUFFER_SIZE, 0);
     data_port = atoi(port);
-    datasock = FTP_create_socket_client(data_port, PORT);
+    datasock = FTP_create_socket_client(data_port, to_string(publicIp.port).c_str());
     recv(activeConn, msg, FTP_BUFFER_SIZE, 0);
     if (strcmp("nxt", msg) == 0) {
         if ((fp = fopen(resolveDataFile(filename).c_str(), "w")) == NULL)

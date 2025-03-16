@@ -24,7 +24,6 @@ class Client {
   public:
     Client();
     ~Client();
-    int setupConn(const char* HOST, const char* PORT, const char* CONNTYPE);
     int setupConn(const IpAddress& ipAddress, const char* CONNTYPE);
     int sendMsg(const std::string& data, int num_retries = 0);
 };

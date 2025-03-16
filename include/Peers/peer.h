@@ -9,8 +9,7 @@
 
 class Peer {
   protected:
-    const char* host;
-    const char* port;
+    IpAddress publicIp;
     std::string uuid;
 
     Server* server;
@@ -22,8 +21,8 @@ class Peer {
   public:
     Peer();
     Peer(const std::string& uuid);
-    void setPublicIp(const char* host, const char* port);
-    void setupServer(const char* host, const char* port);
+    void setPublicIp(const IpAddress& addr);
+    void setupServer(const IpAddress& addr);
     virtual ~Peer();
 };
 

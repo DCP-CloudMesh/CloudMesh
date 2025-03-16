@@ -16,7 +16,7 @@
 
 using namespace std;
 
-Provider::Provider(const char* port, string uuid)
+Provider::Provider(unsigned short port, string uuid)
     : Peer(uuid), ml_zmq_sender(), ml_zmq_receiver(), aggregator_zmq_sender(),
       aggregator_zmq_receiver() {
     isBusy = false;
@@ -27,22 +27,20 @@ Provider::Provider(const char* port, string uuid)
     cout << "Aggregator ZMQ: Sender: " << aggregator_zmq_sender.getAddress()
          << ", Receiver: " << aggregator_zmq_receiver.getAddress() << endl;
 
-    setupServer("127.0.0.1", port);
+    setupServer(IpAddress("127.0.0.1", port));
 }
 Provider::~Provider() noexcept {}
 
 void Provider::registerWithBootstrap() {
-    const char* bootstrapHost = BootstrapNode::getServerIpAddress();
-    const char* bootstrapPort = BootstrapNode::getServerPort();
-    cout << "Connecting to bootstrap node at " << bootstrapHost << ":"
-         << bootstrapPort << endl;
-    if (client->setupConn(bootstrapHost, bootstrapPort, "tcp") == -1) {
+    IpAddress bootstrapIp = BootstrapNode::getServerIpAddr();
+    cout << "Connecting to bootstrap node at " << bootstrapIp << endl;
+    if (client->setupConn(bootstrapIp, "tcp") == -1) {
         cerr << "Unable to connect to boostrap node" << endl;
         exit(1);
     }
 
     shared_ptr<Registration> payload = make_shared<Registration>();
-    Message msg(uuid, IpAddress(host, port), payload);
+    Message msg(uuid, publicIp, payload);
 
     client->sendMsg(msg.serialize(), -1);
 
@@ -65,7 +63,7 @@ void Provider::registerWithBootstrap() {
         IpAddress publicIp = rr->getCallerPublicIpAddress();
         cout << "Public IP = " << publicIp << endl;
         server->replyToConn("Obtained public ip address");
-        setPublicIp(publicIp.host.c_str(), to_string(publicIp.port).c_str());
+        setPublicIp(publicIp);
     }
     server->closeConn();
 }
@@ -170,7 +168,7 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     // TODO: requester IP address could change
     shared_ptr<TaskResponse> aggregatePayload =
         make_shared<TaskResponse>(aggregatedResults);
-    Message aggregateResultMsg(uuid, IpAddress(host, port), aggregatePayload);
+    Message aggregateResultMsg(uuid, publicIp, aggregatePayload);
 
     // busy wait until connection is established
     while (client->setupConn(requesterIpAddr, "tcp") != 0) {
@@ -216,7 +214,7 @@ void Provider::followerHandleTaskRequest() {
 
     // send results back to leader
     shared_ptr<TaskResponse> payload = std::move(taskResponse);
-    Message msg(uuid, IpAddress(host, port), payload);
+    Message msg(uuid, publicIp, payload);
     int code = client->sendMsg(msg.serialize(), -1);
     cout << "Follower sent data to leader with code " << code << endl;
 }

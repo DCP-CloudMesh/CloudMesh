@@ -14,7 +14,7 @@ class Requester : protected Peer {
     void divideTask();
 
   public:
-    Requester(const char* port);
+    Requester(unsigned short port);
     ~Requester() noexcept;
     void sendDiscoveryRequest(unsigned int numProviders);
     void waitForDiscoveryResponse();

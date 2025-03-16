@@ -5,12 +5,6 @@ using namespace std;
 IpAddress::IpAddress(const string& host, const unsigned short port)
     : host(host), port(port) {}
 
-IpAddress::IpAddress(const char* host, const char* port) {
-    this->host = host;
-    string portStr(port);
-    this->port = stoi(portStr);
-}
-
 // converts an IpAddress object to a utility::IpAddress proto object
 utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress) {
     utility::IpAddress* j = new utility::IpAddress();
