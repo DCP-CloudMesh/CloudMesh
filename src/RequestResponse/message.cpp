@@ -5,6 +5,7 @@
 #include "../../include/RequestResponse/discovery_response.h"
 #include "../../include/RequestResponse/message.h"
 #include "../../include/RequestResponse/registration.h"
+#include "../../include/RequestResponse/registration_response.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/RequestResponse/task_response.h"
 #include "../../include/RequestResponse/model_state_dict_params.h"
@@ -39,6 +40,8 @@ void Message::initializePayload(const string& payloadTypeStr) {
         payload = make_shared<Acknowledgement>();
     } else if (payloadTypeStr == "REGISTRATION") {
         payload = make_shared<Registration>();
+    } else if (payloadTypeStr == "REGISTRATION_RESPONSE") {
+        payload = make_shared<RegistrationResponse>();
     } else if (payloadTypeStr == "DISCOVERY_REQUEST") {
         payload = make_shared<DiscoveryRequest>();
     } else if (payloadTypeStr == "DISCOVERY_RESPONSE") {
@@ -91,6 +94,16 @@ string Message::serialize() const {
             static_cast<payload::Registration*>(
                 registration->serializeToProto());
         messageProto.set_allocated_registration(registrationProto);
+        break;
+    }
+    case Payload::Type::REGISTRATION_RESPONSE: {
+        messageProto.set_payloadtype(payload::PayloadType::REGISTRATION_RESPONSE);
+        shared_ptr<RegistrationResponse> registrationResponse =
+            getPayloadAs<RegistrationResponse>();
+        payload::RegistrationResponse* rrProto =
+            static_cast<payload::RegistrationResponse*>(
+                registrationResponse->serializeToProto());
+        messageProto.set_allocated_registrationresponse(rrProto);
         break;
     }
     case Payload::Type::DISCOVERY_REQUEST: {
@@ -159,7 +172,7 @@ void Message::deserialize(const string& serializedData) {
         deserializeIpAddressFromProto(messageProto.senderipaddress());
 
     cout << "Deserializing message with id: " << uuid << " from " << senderUuid
-         << " at " << senderIpAddr.host << ":" << senderIpAddr.port << endl;
+         << " at " << senderIpAddr << endl;
 
     string payloadType = payload::PayloadType_Name(messageProto.payloadtype());
     initializePayload(payloadType);
@@ -186,6 +199,11 @@ void Message::deserialize(const string& serializedData) {
                payload::PayloadType::REGISTRATION) {
         const payload::Registration& registration = messageProto.registration();
         payload->deserializeFromProto(registration);
+    } else if (messageProto.payloadtype() ==
+               payload::PayloadType::REGISTRATION_RESPONSE) {
+        const payload::RegistrationResponse&  registrationResponse =
+            messageProto.registrationresponse();
+        payload->deserializeFromProto(registrationResponse);
     } else if (messageProto.payloadtype() ==
                payload::PayloadType::ACKNOWLEDGEMENT) {
         const payload::Acknowledgement& ack = messageProto.acknowledgement();

@@ -17,13 +17,13 @@ class Client {
     Sends all bytes from a buffer with resilience to partial sends with the
     option of num_retries (=-1 for blocking).
     */
-    ssize_t send_all_bytes(const char* buffer, size_t length, int flags,
+    ssize_t sendAllBytes(const char* buffer, size_t length, int flags,
                            int num_retries = 0);
+    void closeSocket();
 
   public:
     Client();
     ~Client();
-    int setupConn(const char* HOST, const char* PORT, const char* CONNTYPE);
     int setupConn(const IpAddress& ipAddress, const char* CONNTYPE);
     int sendMsg(const std::string& data, int num_retries = 0);
 };

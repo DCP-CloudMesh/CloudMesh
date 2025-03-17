@@ -13,6 +13,7 @@ class Payload {
         UNKNOWN,
         ACKNOWLEDGEMENT,
         REGISTRATION,
+        REGISTRATION_RESPONSE,
         DISCOVERY_REQUEST,
         DISCOVERY_RESPONSE,
         TASK_REQUEST,

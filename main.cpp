@@ -12,16 +12,19 @@ using namespace std;
 // comment testing
 
 int main(int argc, char* argv[]) {
-    const char* port = "8080";
+    unsigned short port = 8080;
+
     string uuid = uuid::generate_uuid_v4();
 
     if (argc >= 2) {
-        port = argv[1];
+        port = stoul(string(argv[1]));
     }
 
 #if defined(BOOTSTRAP)
-    cout << "Running as bootstrap node on port " << port << "." << endl;
-    BootstrapNode b = BootstrapNode(port, uuid);
+    unsigned int bootstrapPort = BootstrapNode::getServerIpAddr().port;
+    cout << "Running as bootstrap node on port " << bootstrapPort << "."
+         << endl;
+    BootstrapNode b = BootstrapNode(uuid);
     b.listen();
 #elif defined(PROVIDER)
     cout << "Running as provider on port " << port << "." << endl;

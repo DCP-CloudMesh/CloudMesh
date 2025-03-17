@@ -6,8 +6,10 @@ Client::Client() : CONN{-1} {}
 
 Client::~Client() {}
 
-int Client::setupConn(const char* HOST, const char* PORT,
-                      const char* CONNTYPE) {
+int Client::setupConn(const IpAddress& ipAddress, const char* CONNTYPE) {
+    const char* HOST = ipAddress.host.c_str();
+    const char* PORT = to_string(ipAddress.port).c_str();
+
     addrinfo hints, *serverInfo;
 
     memset(&hints, 0, sizeof hints);
@@ -28,8 +30,7 @@ int Client::setupConn(const char* HOST, const char* PORT,
 
         if (connect(CONN, addr->ai_addr, addr->ai_addrlen) == -1) {
             cerr << "Error connecting: " << strerror(errno) << endl;
-            close(CONN);
-            CONN = -1;
+            closeSocket();
             continue;
         }
 
@@ -46,12 +47,7 @@ int Client::setupConn(const char* HOST, const char* PORT,
     return 0;
 }
 
-int Client::setupConn(const IpAddress& ipAddress, const char* CONNTYPE) {
-    return setupConn(ipAddress.host.c_str(), to_string(ipAddress.port).c_str(),
-                     CONNTYPE);
-}
-
-ssize_t Client::send_all_bytes(const char* buffer, size_t length, int flags,
+ssize_t Client::sendAllBytes(const char* buffer, size_t length, int flags,
                                int num_retries) {
     size_t total_sent = 0;
     int retries_used = 0;
@@ -80,13 +76,13 @@ int Client::sendMsg(const string& data, int num_retries) {
 
     // Send message length first
     uint32_t data_size = htonl(data.size()); // Convert from host byte order to network byte order
-    if (send_all_bytes(reinterpret_cast<char*>(&data_size), sizeof(data_size), 0, num_retries) == -1) {
+    if (sendAllBytes(reinterpret_cast<char*>(&data_size), sizeof(data_size), 0, num_retries) == -1) {
         cerr << "Failed to send message length" << endl;
         return 1;
     }
 
     // Send message data
-    if (send_all_bytes(data.c_str(), data.size(), 0, num_retries) == -1) {
+    if (sendAllBytes(data.c_str(), data.size(), 0, num_retries) == -1) {
         cerr << "Failed to send message data" << endl;
         return 1;
     }
@@ -97,7 +93,7 @@ int Client::sendMsg(const string& data, int num_retries) {
     ssize_t mLen = recv(CONN, buffer, sizeof(buffer), 0);
     if (mLen < 0) {
         cerr << "Error reading: " << strerror(errno) << endl;
-        close(CONN);
+        closeSocket();
         return 1;
     }
     buffer[mLen] = '\0';
@@ -124,7 +120,7 @@ int Client::sendMsg(const string& data, int num_retries) {
             cerr << "FTP: Requested file is not within the data directory"
                  << endl;
             send(CONN, "0", FTP_BUFFER_SIZE, 0);
-            close(CONN);
+            closeSocket();
             return 1;
         }
 
@@ -132,7 +128,7 @@ int Client::sendMsg(const string& data, int num_retries) {
         if (data_port == -1) {
             cerr << "FTP: No available ports" << endl;
             send(CONN, "0", FTP_BUFFER_SIZE, 0);
-            close(CONN);
+            closeSocket();
             return 1;
         }
         cout << "FTP: Data port is: " << data_port << endl;
@@ -169,6 +165,13 @@ int Client::sendMsg(const string& data, int num_retries) {
         }
     }
 
-    close(CONN);
+    closeSocket();
     return 0;
+}
+
+void Client::closeSocket() {
+    if (CONN != -1) {
+        close(CONN);
+        CONN = -1;
+    }
 }

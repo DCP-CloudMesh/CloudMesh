@@ -2,28 +2,16 @@
 
 using namespace std;
 
-Server::Server(const char* host, const char* port, const char* type)
-    : HOST{host}, PORT{port}, CONNTYPE{type}, server{-1} {}
+Server::Server(const IpAddress& addr, const char* type)
+    : publicIp{addr}, CONNTYPE{type}, server{-1} {}
 
 void Server::setupServer() {
-#if defined(NOLOCAL)
-    string response = startNgrokForwarding(stoi(PORT));
-    // update public IP address
-    response = response.substr(6);
-    string ip =
-        response.substr(0, response.find(":")); // ignore "tcp://" prefix
-    unsigned short port =
-        static_cast<unsigned short>(stoi(response.substr(ip.length() + 1)));
-    publicIP = IpAddress{ip, port};
-#elif defined(LOCAL)
-    publicIP = IpAddress{HOST, static_cast<unsigned short>(stoi(PORT))};
-#else
+#if !defined(NOLOCAL) && !defined(LOCAL)
     cerr << "Please specify either --local or --nolocal flag." << endl;
     exit(1);
 #endif
 
-    cout << "Initializing server on " << publicIP.host << ":" << publicIP.port
-         << endl;
+    cout << "Initializing server on " << publicIp << endl;
 
     server = socket(AF_INET, SOCK_STREAM, 0);
     if (server == -1) {
@@ -33,19 +21,19 @@ void Server::setupServer() {
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(stoi(PORT));
+    serverAddr.sin_port = htons(publicIp.port);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (::bind(server, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) ==
         -1) {
         cerr << "Error binding: " << strerror(errno) << endl;
-        close(server);
+        closeSocket();
         exit(1);
     }
 
     if (listen(server, 5) == -1) {
         cerr << "Error listening: " << strerror(errno) << endl;
-        close(server);
+        closeSocket();
         exit(1);
     }
 
@@ -53,21 +41,31 @@ void Server::setupServer() {
 }
 
 bool Server::acceptConn() {
-    sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
-    activeConn = accept(server, (struct sockaddr*)&clientAddr, &clientAddrLen);
+    IpAddress addr;
+    return acceptConn(addr);
+}
+
+bool Server::acceptConn(IpAddress& clientAddr) {
+    sockaddr_in addr;
+    socklen_t addrLen = sizeof(addr);
+    activeConn = accept(server, (struct sockaddr*)&addr, &addrLen);
 
     if (activeConn == -1) {
         cerr << "Error accepting: " << strerror(errno) << endl;
-        close(server);
         return false;
     }
 
-    cout << "Client connected" << endl;
+    // Get address of incoming connection
+    char addrBuffer[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET,  &addr.sin_addr, addrBuffer, sizeof(addrBuffer));
+    clientAddr.host = string(addrBuffer);
+    clientAddr.port = htons(addr.sin_port);
+
+    cout << "Client connected from " << clientAddr << endl;
     return true;
 }
 
-ssize_t Server::recv_all_bytes(char* buffer, size_t length, int flags, int num_retries) {
+ssize_t Server::recvAllBytes(char* buffer, size_t length, int flags, int num_retries) {
     size_t total_received = 0;
     int retries_used = 0;
     while (total_received < length) {
@@ -96,7 +94,7 @@ ssize_t Server::recv_all_bytes(char* buffer, size_t length, int flags, int num_r
 int Server::receiveFromConn(string& msg, int num_retries) {
     // Read message size
     uint32_t data_size;
-    if (recv_all_bytes(reinterpret_cast<char*>(&data_size), sizeof(data_size), 0, num_retries) == -1) {
+    if (recvAllBytes(reinterpret_cast<char*>(&data_size), sizeof(data_size), 0, num_retries) == -1) {
         cerr << "Failed to receive message length" << endl;
         return 1;
     }
@@ -104,7 +102,7 @@ int Server::receiveFromConn(string& msg, int num_retries) {
 
     // Read message data
     string data(data_size, '\0');
-    if (recv_all_bytes(data.data(), data_size, 0, num_retries) == -1) {
+    if (recvAllBytes(data.data(), data_size, 0, num_retries) == -1) {
         cerr << "Failed to receive message data" << endl;
         return 1;
     }
@@ -131,7 +129,7 @@ void Server::getFileFTP(string filename) {
     FILE* fp;
     recv(activeConn, port, FTP_BUFFER_SIZE, 0);
     data_port = atoi(port);
-    datasock = FTP_create_socket_client(data_port, PORT);
+    datasock = FTP_create_socket_client(data_port, to_string(publicIp.port).c_str());
     recv(activeConn, msg, FTP_BUFFER_SIZE, 0);
     if (strcmp("nxt", msg) == 0) {
         if ((fp = fopen(resolveDataFile(filename).c_str(), "w")) == NULL)
@@ -157,10 +155,21 @@ void Server::getFileFTP(string filename) {
     }
 }
 
-void Server::closeConn() { close(activeConn); }
+void Server::closeConn() {
+    if (activeConn != -1) {
+        close(activeConn);
+        activeConn = -1;
+    }
+}
+
+void Server::closeSocket() {
+    if (server != -1) {
+        closeConn();
+        close(server);
+        server = -1;
+    }
+}
 
 Server::~Server() {
-    if (server != -1) {
-        close(server);
-    }
+    closeSocket();
 }

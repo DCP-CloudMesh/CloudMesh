@@ -8,13 +8,12 @@
 
 class BootstrapNode : public Peer {
   public:
-    BootstrapNode(const char*, std::string);
+    BootstrapNode(std::string);
     // ----------------- FIX LATER -----------------
     BootstrapNode() {}
     ~BootstrapNode();
 
-    static const char* getServerIpAddress();
-    static const char* getServerPort();
+    static IpAddress getServerIpAddr();
 
     void registerPeer(const std::string& peerUuid, const IpAddress& peerIpAddr);
     AddressTable discoverPeers(const std::string& peerUuid,

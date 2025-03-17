@@ -7,6 +7,11 @@ Follow this to install bazel - https://bazel.build/install
 
 We can install ZeroMQ for cpp as follows. Run the following starting from the `CloudMesh/third_party/` folder.
 
+#### Tailscale
+
+Tailscale is used to setup a P2P vpn network to connect the machines. Instructions to install can be found here:
+https://tailscale.com/kb/1347/installation
+
 #### Mac Dependencies
 
 May need to install the following when troubleshooting issues
@@ -45,9 +50,15 @@ We install ZeroMQ for Python using `pip install pyzmq`.
 - BUILD file - Contains the build instructions for the targets.
 - MODULE.bazel file - Contains the module name and the dependencies.
 
-## Compilation
+## Compilation (Non Local - Multiple Machines)
 
-To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, run the following commands:
+To compile **BOOTSTRAP**, **PROVIDER** and **REQUESTER**, ensure that the `BOOTSTRAP_HOST` env variable is set, which can be done using the following command:
+```
+export BOOTSTRAP_HOST=___
+```
+The `BOOTSTRAP_PORT` env variable can also be set (unset is default to 8080).
+
+Then run the following commands  to compile the source code:
 ### MacOS
 ```
 bazel build //... --experimental_google_legacy_api --config=macos

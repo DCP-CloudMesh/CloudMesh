@@ -35,7 +35,7 @@ class Provider : public Peer {
     ZMQReceiver aggregator_zmq_receiver;
 
   public:
-    Provider(const char* port, std::string uuid);
+    Provider(unsigned short port, std::string uuid);
     ~Provider() noexcept;
 
     void registerWithBootstrap();
