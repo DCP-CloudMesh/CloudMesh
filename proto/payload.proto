@@ -12,6 +12,7 @@ enum PayloadType {
     DISCOVERY_RESPONSE = 4;
     TASK_REQUEST = 5;
     TASK_RESPONSE = 6;
+    MODEL_STATE_DICT_PARAMS = 7;
 }
 
 message PayloadMessage {
@@ -28,6 +29,7 @@ message PayloadMessage {
         Acknowledgement acknowledgement = 10;
         Registration registration = 11;
         RegistrationResponse registrationResponse = 12;
+        ModelStateDictParams modelStateDictParams = 13;
     }
 }
 
@@ -42,17 +44,28 @@ message TaskRequest {
     int32 numWorkers = 1;
     string leaderUuid = 2;
     utility.AddressTable assignedWorkers = 3;
+    int32 numEpochs = 6;
+
     oneof training_data_source {
         string glob_pattern = 4;
         string training_data_index_filename = 5;
     }
 }
 
-message TrainingData { string training_data_index_filename = 1; }
+message TrainingData {
+    string training_data_index_filename = 1;
+    int32 numEpochs = 2;
+}
 
-message AggregatorInputData { bytes modelStateDict = 1;  }
+message ModelStateDictParams {
+    bytes modelStateDict = 1;
+    bool trainingIsComplete = 2;
+}
 
-message TaskResponse { bytes modelStateDict = 1; }
+message TaskResponse {
+    bytes modelStateDict = 1;
+    bool trainingIsComplete = 2;
+}
 
 message Acknowledgement {}
 

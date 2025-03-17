@@ -87,6 +87,7 @@ void Requester::divideTask() {
 
     // divide the vector into subvectors
     int numSubtasks = queuedTask.getNumWorkers();
+    int numEpochs = queuedTask.getNumEpochs();
     int subtaskSize = trainingFiles.size() / numSubtasks;
     int remainder = trainingFiles.size() % numSubtasks;
 
@@ -113,7 +114,7 @@ void Requester::divideTask() {
 
         // Build a path by combining the filename and DATA_DIR using path joins
         string filename = "subtaskIndex_" + std::to_string(i) + ".txt";
-        TaskRequest subtaskRequest(1, filename, TaskRequest::INDEX_FILENAME);
+        TaskRequest subtaskRequest(1, filename, numEpochs, TaskRequest::INDEX_FILENAME);
         subtaskRequest.writeToTrainingDataIndexFile(subtaskTrainingFiles);
         cout << "FTP: Created index file "
              << subtaskRequest.getTrainingDataIndexFilename() << endl;
