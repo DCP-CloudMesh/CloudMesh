@@ -129,7 +129,7 @@ string Message::serialize() const {
     }
     case Payload::Type::MODEL_STATE_DICT_PARAMS: {
         messageProto.set_payloadtype(payload::PayloadType::MODEL_STATE_DICT_PARAMS);
-        shared_ptr<TaskResponse> modelParams = getPayloadAs<TaskResponse>();
+        shared_ptr<ModelStateDictParams> modelParams = getPayloadAs<ModelStateDictParams>();
         auto* modelParamsProto =
             static_cast<payload::ModelStateDictParams*>(modelParams->serializeToProto());
         messageProto.set_allocated_modelstatedictparams(modelParamsProto);

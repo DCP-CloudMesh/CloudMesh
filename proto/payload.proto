@@ -52,9 +52,15 @@ message TrainingData {
     int32 numEpochs = 2;
 }
 
-message ModelStateDictParams { bytes modelStateDict = 1; }
+message ModelStateDictParams {
+    bytes modelStateDict = 1;
+    bool trainingIsComplete = 2;
+}
 
-message TaskResponse { bytes modelStateDict = 1; }
+message TaskResponse {
+    bytes modelStateDict = 1;
+    bool trainingIsComplete = 2;
+}
 
 message Acknowledgement {}
 

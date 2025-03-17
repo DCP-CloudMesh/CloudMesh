@@ -30,7 +30,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch):
     print("[Epoch %d] loss: %.3f" % (epoch + 1, running_loss / len(train_loader)))
 
 
-def train(model, device, train_loader, optimizer, criterion, epoch, agg_cycle, receiver, sender):
+def train_multiple_aggregation(model, device, train_loader, optimizer, criterion, epoch, agg_cycle, receiver, sender):
     """
     This function is equivalent to the train function above however the difference is that this 
     function will use ZMQSender and ZMQReceiver to send and receive model state dicts 

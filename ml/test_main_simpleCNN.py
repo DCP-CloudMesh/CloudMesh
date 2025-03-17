@@ -32,13 +32,12 @@ def main():
     print(f"Using device: {device}")
 
     # recieve a payload with the data_file_names
-    payload = receiver.recv()
+    payload = receiver.receive()
     training_payload = payload_pb2.TrainingData()
     training_payload.ParseFromString(payload)
     data_file_names = training_payload.training_data_index_filename
     epochs = training_payload.numEpochs
     print("data_file_names: ", data_file_names)
-    
     # print hyperparameters
     print("batch_size: ", batch_size)
     print("learning_rate: ", learning_rate)
@@ -94,9 +93,11 @@ def main():
         pickled_weights = pickle.dumps(model.state_dict())
         task_response = payload_pb2.TaskResponse()
         task_response.modelStateDict = pickled_weights
+        task_response.trainingIsComplete = False
         sender.send(task_response.SerializeToString())
 
-        # recieve the updated message
+        # receive the updated message
+        # TODO: fix this if we ignore the very last message
         payload = receiver.receive()
         agg_inp = payload_pb2.ModelStateDictParams()
         agg_inp.ParseFromString(payload)
@@ -117,7 +118,12 @@ def main():
     print("Start Time: ", start_time)
     print("End Time: ", end_time)
 
-    # TODO: send final response
+    # send final response
+    pickled_weights = pickle.dumps(model.state_dict())
+    task_response = payload_pb2.TaskResponse()
+    task_response.modelStateDict = pickled_weights
+    task_response.trainingIsComplete = True
+    sender.send(task_response.SerializeToString())
 
     return
 
