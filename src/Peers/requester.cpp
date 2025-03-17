@@ -33,7 +33,8 @@ void Requester::sendDiscoveryRequest(unsigned int numProviders) {
 
 void Requester::waitForDiscoveryResponse() {
     cout << "Waiting for discovery response..." << endl;
-    while (!server->acceptConn());
+    while (!server->acceptConn())
+        ;
 
     // receive response from bootstrap (or possibly another peer)
     string serializedData;
@@ -114,7 +115,8 @@ void Requester::divideTask() {
 
         // Build a path by combining the filename and DATA_DIR using path joins
         string filename = "subtaskIndex_" + std::to_string(i) + ".txt";
-        TaskRequest subtaskRequest(1, filename, numEpochs, TaskRequest::INDEX_FILENAME);
+        TaskRequest subtaskRequest(1, filename, numEpochs,
+                                   TaskRequest::INDEX_FILENAME);
         subtaskRequest.writeToTrainingDataIndexFile(subtaskTrainingFiles);
         cout << "FTP: Created index file "
              << subtaskRequest.getTrainingDataIndexFilename() << endl;
@@ -175,7 +177,8 @@ TaskResponse Requester::getResults() {
     TaskResponse taskResult;
     // busy wait until connection is established
     cout << "Waiting for leader peer to connect" << endl;
-    while (!server->acceptConn());
+    while (!server->acceptConn())
+        ;
 
     // get data from workers and aggregate
     cout << "Waiting for leader peer to send results" << endl;

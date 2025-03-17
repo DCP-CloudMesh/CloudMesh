@@ -39,7 +39,8 @@ void Provider::registerWithBootstrap() {
     client->sendMsg(msg.serialize(), -1);
 
     // Get own public address from bootstrap node
-    while (!server->acceptConn());
+    while (!server->acceptConn())
+        ;
 
     string registrationRespStr;
     if (server->receiveFromConn(registrationRespStr) == 1) {
@@ -245,6 +246,8 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
             cout << "Acknowledgement received from requester" << endl;
             break;
         }
+
+        server->replyToConn("Received acknowledgement.");
     }
 
     server->closeConn();
