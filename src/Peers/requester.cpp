@@ -50,6 +50,8 @@ void Requester::waitForDiscoveryResponse() {
     msg.deserialize(serializedData);
     shared_ptr<Payload> payload = msg.getPayload();
 
+    cout << "payload type: " << payload->getType() << endl;
+
     if (payload->getType() == Payload::Type::DISCOVERY_RESPONSE) {
         shared_ptr<DiscoveryResponse> dr =
             static_pointer_cast<DiscoveryResponse>(payload);

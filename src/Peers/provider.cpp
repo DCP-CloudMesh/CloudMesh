@@ -37,30 +37,36 @@ void Provider::registerWithBootstrap() {
     Message msg(uuid, publicIp, payload);
 
     client->sendMsg(msg.serialize(), -1);
+    while (true) {
+        // Get own public address from bootstrap node
+        while (!server->acceptConn())
+            ;
 
-    // Get own public address from bootstrap node
-    while (!server->acceptConn())
-        ;
+        string registrationRespStr;
+        if (server->receiveFromConn(registrationRespStr) == 1) {
+            cerr << "Failed to receive registration response" << endl;
+            server->closeConn();
+            exit(1);
+        }
 
-    string registrationRespStr;
-    if (server->receiveFromConn(registrationRespStr) == 1) {
-        cerr << "Failed to receive registration response" << endl;
+        Message respMsg;
+        respMsg.deserialize(registrationRespStr);
+        shared_ptr<Payload> respPayload = msg.getPayload();
+
+        cout << "payload type: " << payload->getType() << endl;
+
+        if (respPayload->getType() == Payload::Type::REGISTRATION_RESPONSE) {
+            shared_ptr<RegistrationResponse> rr =
+                static_pointer_cast<RegistrationResponse>(respPayload);
+            IpAddress publicIp = rr->getCallerPublicIpAddress();
+            cout << "Public IP = " << publicIp << endl;
+            server->replyToConn("Obtained public ip address");
+            setPublicIp(publicIp);
+            server->closeConn();
+            break;
+        }
         server->closeConn();
-        exit(1);
     }
-
-    Message respMsg;
-    respMsg.deserialize(registrationRespStr);
-    shared_ptr<Payload> respPayload = msg.getPayload();
-    if (respPayload->getType() == Payload::Type::REGISTRATION_RESPONSE) {
-        shared_ptr<RegistrationResponse> rr =
-            static_pointer_cast<RegistrationResponse>(respPayload);
-        IpAddress publicIp = rr->getCallerPublicIpAddress();
-        cout << "Public IP = " << publicIp << endl;
-        server->replyToConn("Obtained public ip address");
-        setPublicIp(publicIp);
-    }
-    server->closeConn();
 }
 
 void Provider::listen() {
@@ -215,6 +221,9 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     // TODO: requester IP address could change
     shared_ptr<TaskResponse> aggregatePayload =
         make_shared<TaskResponse>(aggregatedResults);
+
+    cout << "leader ip: " << publicIp << endl;
+
     Message aggregateResultMsg(uuid, publicIp, aggregatePayload);
 
     // busy wait until connection is established
