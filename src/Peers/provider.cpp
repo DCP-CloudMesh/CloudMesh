@@ -204,7 +204,7 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
 
             shared_ptr<TaskResponse> payload =
                 make_shared<TaskResponse>(aggregatedResults);
-            Message msg(uuid, IpAddress(host, port), payload);
+            Message msg(uuid, publicIp, payload);
             int code = client->sendMsg(msg.serialize(), -1);
             cout << "Leader sent data to follower with code " << code << endl;
         }
