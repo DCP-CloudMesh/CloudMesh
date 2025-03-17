@@ -7,6 +7,11 @@ Follow this to install bazel - https://bazel.build/install
 
 We can install ZeroMQ for cpp as follows. Run the following starting from the `CloudMesh/third_party/` folder.
 
+#### Tailscale
+
+Tailscale is used to setup a P2P vpn network to connect the machines. Instructions to install can be found here:
+https://tailscale.com/kb/1347/installation
+
 #### Mac Dependencies
 
 May need to install the following when troubleshooting issues
