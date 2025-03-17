@@ -7,10 +7,11 @@ package payload;
 enum PayloadType {
     ACKNOWLEDGEMENT = 0;
     REGISTRATION = 1;
-    DISCOVERY_REQUEST = 2;
-    DISCOVERY_RESPONSE = 3;
-    TASK_REQUEST = 4;
-    TASK_RESPONSE = 5;
+    REGISTRATION_RESPONSE = 2;
+    DISCOVERY_REQUEST = 3;
+    DISCOVERY_RESPONSE = 4;
+    TASK_REQUEST = 5;
+    TASK_RESPONSE = 6;
 }
 
 message PayloadMessage {
@@ -26,10 +27,14 @@ message PayloadMessage {
         TaskResponse taskResponse = 9;
         Acknowledgement acknowledgement = 10;
         Registration registration = 11;
+        RegistrationResponse registrationResponse = 12;
     }
 }
 
-message DiscoveryResponse { utility.AddressTable availablePeers = 1; }
+message DiscoveryResponse {
+    utility.IpAddress callerAddr = 1;
+    utility.AddressTable availablePeers = 2;
+}
 
 message DiscoveryRequest { int32 peersRequested = 1; }
 
@@ -52,3 +57,5 @@ message TaskResponse { bytes modelStateDict = 1; }
 message Acknowledgement {}
 
 message Registration {}
+
+message RegistrationResponse { utility.IpAddress callerAddr = 1; }

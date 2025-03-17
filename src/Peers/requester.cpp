@@ -12,24 +12,22 @@
 
 using namespace std;
 
-Requester::Requester(const char* port) : Peer() {
-    setupServer("127.0.0.1", port);
+Requester::Requester(unsigned short port) : Peer() {
+    setupServer(IpAddress("127.0.0.1", port));
 }
 
 Requester::~Requester() noexcept {}
 
 void Requester::sendDiscoveryRequest(unsigned int numProviders) {
-    const char* bootstrapHost = BootstrapNode::getServerIpAddress();
-    const char* bootstrapPort = BootstrapNode::getServerPort();
-    cout << "Connecting to bootstrap node at " << bootstrapHost << ":"
-         << bootstrapPort << endl;
-    if (client->setupConn(bootstrapHost, bootstrapPort, "tcp") == -1) {
+    IpAddress bootstrapIp = BootstrapNode::getServerIpAddr();
+    cout << "Connecting to bootstrap node at " << bootstrapIp << endl;
+    if (client->setupConn(bootstrapIp, "tcp") == -1) {
         cerr << "Unable to connect to boostrap node" << endl;
         exit(1);
     }
 
     shared_ptr<Payload> payload = make_shared<DiscoveryRequest>(numProviders);
-    Message msg(uuid, IpAddress(host, port), payload);
+    Message msg(uuid, publicIp, payload);
     client->sendMsg(msg.serialize(), -1);
 }
 
@@ -54,6 +52,10 @@ void Requester::waitForDiscoveryResponse() {
     if (payload->getType() == Payload::Type::DISCOVERY_RESPONSE) {
         shared_ptr<DiscoveryResponse> dr =
             static_pointer_cast<DiscoveryResponse>(payload);
+        IpAddress publicIp = dr->getCallerPublicIpAddress();
+        cout << "Public Ip = " << publicIp << endl;
+        setPublicIp(publicIp);
+
         AddressTable availablePeers = dr->getAvailablePeers();
         for (auto& it : availablePeers) {
             providerPeers[it.first] = it.second;
@@ -154,12 +156,11 @@ void Requester::sendTaskRequest() {
         // package and serialize the requests
         shared_ptr<TaskRequest> payload =
             make_shared<TaskRequest>(taskRequests[ctr]);
-        Message msg(uuid, IpAddress(host, port), payload);
+        Message msg(uuid, publicIp, payload);
 
         // set up the client
-        const char* host = worker.second.host.c_str();
-        const char* port = to_string(worker.second.port).c_str();
-        client->setupConn(host, port, "tcp");
+        IpAddress workerIp = worker.second;
+        client->setupConn(workerIp, "tcp");
 
         // send the request
         client->sendMsg(msg.serialize(), -1);
@@ -192,7 +193,7 @@ TaskResponse Requester::getResults() {
 
     // send success acknowledgement to provider
     shared_ptr<Acknowledgement> payload = make_shared<Acknowledgement>();
-    Message response(uuid, IpAddress(host, port), payload);
+    Message response(uuid, publicIp, payload);
     client->setupConn(leaderIpAddr, "tcp");
     client->sendMsg(response.serialize());
 

@@ -42,7 +42,8 @@ struct IpAddress {
 
     IpAddress() {}
     IpAddress(const std::string& host, const unsigned short port);
-    IpAddress(const char* host, const char* port);
+
+    friend std::ostream& operator<<(std::ostream& os, const IpAddress& ip);
 };
 
 utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress);
@@ -61,8 +62,6 @@ static std::uniform_int_distribution<> dis2(8, 11);
 
 std::string generate_uuid_v4();
 } // namespace uuid
-
-std::string startNgrokForwarding(unsigned short port);
 
 std::string vectorToString(std::vector<int> v);
 
