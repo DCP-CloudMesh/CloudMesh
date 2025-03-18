@@ -51,7 +51,7 @@ void Provider::registerWithBootstrap() {
 
     Message respMsg;
     respMsg.deserialize(registrationRespStr);
-    shared_ptr<Payload> respPayload = msg.getPayload();
+    shared_ptr<Payload> respPayload = respMsg.getPayload();
     if (respPayload->getType() == Payload::Type::REGISTRATION_RESPONSE) {
         shared_ptr<RegistrationResponse> rr =
             static_pointer_cast<RegistrationResponse>(respPayload);
