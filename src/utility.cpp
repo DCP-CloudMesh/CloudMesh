@@ -174,6 +174,12 @@ fs::path resolveDataFile(const std::string filename) {
 
 fs::path resolveDataFileInDirectory(const std::string filename,
                                     const std::string dir) {
+
+    fs::path dirPath(dir);
+    if (!fs::exists(dirPath)) {
+        fs::create_directories(dirPath);
+    }
+    
     std::string resolvedFilename = dir + "/" + filename;
     return fs::path(resolvedFilename);
 }

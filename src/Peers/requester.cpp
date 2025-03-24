@@ -200,8 +200,21 @@ TaskResponse Requester::getResults() {
     // send success acknowledgement to provider
     shared_ptr<Acknowledgement> payload = make_shared<Acknowledgement>();
     Message response(uuid, publicIp, payload);
-    client->setupConn(leaderIpAddr, "tcp");
-    client->sendMsg(response.serialize());
+    cout << "setting up connection" << endl;
+    cout << "leaderIpAddr: " << leaderIpAddr << endl;
+
+    while (client->setupConn(leaderIpAddr, "tcp") != 0) {
+        constexpr int retry = 5;
+        cout << "Failed to connect to leader peer, trying again in "
+             << retry << "s" << endl;
+        sleep(retry);
+    }
+
+
+    if (client->sendMsg(response.serialize(), 5) == 1) {
+        cerr << "Failed to send aggregated result to leader peer" << endl;
+        exit(1);
+    }
 
     return taskResult;
 }

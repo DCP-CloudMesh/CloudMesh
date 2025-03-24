@@ -111,11 +111,8 @@ void Provider::listen() {
         server->getFileIntoDirFTP(taskRequest->getTrainingDataIndexFilename(),
                            TARGET_DATA_DIR);
 
-        ingestTrainingData();
-
         // bug here where we are saving the file to the same file
         // fix in PR. RN, this will not work if multiple machines.
-        // server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
         ingestTrainingData();
         server->closeConn();
 
@@ -319,6 +316,8 @@ void Provider::followerHandleTaskRequest() {
 }
 
 void Provider::ingestTrainingData() {
+    server->getFileIntoDirFTP(taskRequest->getTrainingDataIndexFilename(), TARGET_DATA_DIR);
+
     string trainingDataIndexFile = taskRequest->getTrainingDataIndexFilename();
     vector<string> requiredTrainingFiles =
         taskRequest->getTrainingDataFiles(TARGET_DATA_DIR);
