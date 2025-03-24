@@ -32,9 +32,15 @@ namespace fs = std::filesystem;
 #define MAX_PORT_TRIES 10
 
 /*
- * Defines the data location of training files.
+ * Defines the data location of training files and index files for the requestor.
  */
-const std::string DATA_DIR = "CIFAR10/train";
+const std::string SOURCE_DATA_DIR = "CIFAR10/train";
+
+/*
+ * Defines the data location of training files being used locally by a provider.
+ */
+const std::string TARGET_DATA_DIR = "data/CIFAR10";
+
 
 struct IpAddress {
     std::string host;
@@ -42,7 +48,8 @@ struct IpAddress {
 
     IpAddress() {}
     IpAddress(const std::string& host, const unsigned short port);
-    IpAddress(const char* host, const char* port);
+
+    friend std::ostream& operator<<(std::ostream& os, const IpAddress& ip);
 };
 
 utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress);
@@ -62,8 +69,6 @@ static std::uniform_int_distribution<> dis2(8, 11);
 std::string generate_uuid_v4();
 } // namespace uuid
 
-std::string startNgrokForwarding(unsigned short port);
-
 std::string vectorToString(std::vector<int> v);
 
 int FTP_create_socket_client(int port, const char* addr);
@@ -79,10 +84,17 @@ int FTP_accept_conn(int sock);
 fs::path resolveDataFile(const std::string filename);
 
 /*
- * Verifies if a file is present in the data directory. Accepts
- * a filename as input.
+ * Resolves the path of a file within a directory.
+ * Accepts a filename, directory and returns a relative path.
  */
-bool isFileWithinDataDirectory(const std::string& filename);
+fs::path resolveDataFileInDirectory(const std::string filename,
+                                    const std::string dir);
+
+/*
+ * Verifies if a file is present in a directory. Accepts
+ * a filename and directory as input.
+ */
+bool isFileWithinDirectory(const std::string& filename, const std::string dir);
 
 /*
  * Generates a random port number that is available for use between MIN_PORT and

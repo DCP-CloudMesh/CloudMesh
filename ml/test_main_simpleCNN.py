@@ -10,40 +10,38 @@ import zmq
 
 from networks import SimpleCNN
 from dataloader import CIFAR10Dataset, get_data_loaders
-from utils import train, val, test
+from utils import train, val, test, network
 from proto import payload_pb2, utility_pb2
 
 
 def main():
-    # Set up the context and responder socket
+    # Set up the context and receiver socket
     port_rec = int(input("Enter the ZMQ sender port number: "))
     port_send = int(input("Enter the ZMQ receiver port number: "))
 
     context = zmq.Context()
-    responder = context.socket(zmq.REP)
-    responder.setsockopt(zmq.LINGER, 0)
-    responder.bind("tcp://*:" + str(port_rec))
-
-    sender = context.socket(zmq.REQ)
-    sender.setsockopt(zmq.LINGER, 0)
-    sender.connect("tcp://localhost:" + str(port_send))
+    receiver = network.ZMQReciever(context, port_rec)
+    sender = network.ZMQSender(context, port_send)
 
     # Hyperparameters (can use CLI)
     batch_size = 64
     learning_rate = 0.001
-    epochs = 1  # for now
+    # epochs = 2  # for now
     device = torch.device(
         "mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
 
     # recieve a payload with the data_file_names
-    payload = responder.recv()
-    responder.send_string("ACK")
-
+    payload = receiver.receive()
     training_payload = payload_pb2.TrainingData()
     training_payload.ParseFromString(payload)
     data_file_names = training_payload.training_data_index_filename
+    epochs = training_payload.numEpochs
     print("data_file_names: ", data_file_names)
+    # print hyperparameters
+    print("batch_size: ", batch_size)
+    print("learning_rate: ", learning_rate)
+    print("epochs: ", epochs)
 
     start_time = time.time()
 
@@ -91,6 +89,23 @@ def main():
         print("validating")
         val(model, device, val_loader, criterion, epoch, data_path)
 
+        # non compressed, non protobuf sending weights
+        pickled_weights = pickle.dumps(model.state_dict())
+        task_response = payload_pb2.TaskResponse()
+        task_response.modelStateDict = pickled_weights
+        task_response.trainingIsComplete = False
+        sender.send(task_response.SerializeToString())
+
+        # receive the updated message
+        # TODO: fix this if we ignore the very last message
+        payload = receiver.receive()
+        agg_inp = payload_pb2.ModelStateDictParams()
+        agg_inp.ParseFromString(payload)
+        averaged_state_dict = pickle.loads(agg_inp.modelStateDict)
+
+        # update current model with the averaged state dict
+        model.load_state_dict(averaged_state_dict)
+
     # Test the model
     test(model, device, test_loader, criterion, data_path)
 
@@ -103,16 +118,12 @@ def main():
     print("Start Time: ", start_time)
     print("End Time: ", end_time)
 
-    # non compressed, non protobuf sending weights
+    # send final response
     pickled_weights = pickle.dumps(model.state_dict())
-
     task_response = payload_pb2.TaskResponse()
     task_response.modelStateDict = pickled_weights
+    task_response.trainingIsComplete = True
     sender.send(task_response.SerializeToString())
-    print("Sent results, waiting for acknowledgement...")
-    
-    acknowledgement = sender.recv()
-    print("Acknowledgement received")
 
     return
 

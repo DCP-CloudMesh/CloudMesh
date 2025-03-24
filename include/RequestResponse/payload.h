@@ -13,10 +13,12 @@ class Payload {
         UNKNOWN,
         ACKNOWLEDGEMENT,
         REGISTRATION,
+        REGISTRATION_RESPONSE,
         DISCOVERY_REQUEST,
         DISCOVERY_RESPONSE,
         TASK_REQUEST,
-        TASK_RESPONSE
+        TASK_RESPONSE,
+        MODEL_STATE_DICT_PARAMS,
     };
 
     Payload(Type type);

@@ -10,26 +10,28 @@
 #include <unistd.h>
 
 class Server {
-    const char* HOST;
-    const char* PORT;
+    IpAddress publicIp;
     const char* CONNTYPE;
-    IpAddress publicIP;
-    int server;     // stores the current running server id
-    int activeConn; // stores the current active connection id
+    int server = -1;     // stores the current running server id
+    int activeConn = -1; // stores the current active connection id
 
     /*
     Receives all bytes into a buffer with resilience to partial data sends.
     */
-    ssize_t recv_all_bytes(char* buffer, size_t length, int flags, int num_retries = 0);
+    ssize_t recvAllBytes(char* buffer, size_t length, int flags, int num_retries = 0);
+    void closeSocket();
 
   public:
-    Server(const char* host, const char* port, const char* type);
+    Server(const IpAddress& addr, const char* type);
     ~Server();
     void setupServer();                                         // prepare server for connection
     bool acceptConn();                                          // blocking
+    bool acceptConn(IpAddress& clientAddr);                     // blocking
     int receiveFromConn(std::string& msg, int num_retries = 0); // process the active conn
     void replyToConn(std::string message);                      // reply to the active conn
-    void getFileFTP(std::string filename);                      // retrieve remote file
+    void
+    getFileIntoDirFTP(std::string filename,
+               std::string directory); // retrieve remote file into directory
     void closeConn();                                           // close the active conn
 };
 

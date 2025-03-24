@@ -4,7 +4,7 @@
 
 using namespace std;
 
-Peer::Peer() : host{nullptr}, port{nullptr}, server{nullptr}, client{nullptr} {
+Peer::Peer() : server{nullptr}, client{nullptr} {
     // initialize client
     client = new Client();
 
@@ -13,22 +13,32 @@ Peer::Peer() : host{nullptr}, port{nullptr}, server{nullptr}, client{nullptr} {
 }
 
 Peer::Peer(const string& uuid)
-    : host{nullptr}, port{nullptr}, uuid{uuid}, server{nullptr},
-      client{nullptr} {
+    : uuid{uuid}, server{nullptr}, client{nullptr} {
     // initialize client
     client = new Client();
 }
 
-void Peer::setupServer(const char* host, const char* port) {
-    this->host = host;
-    this->port = port;
+void Peer::setPublicIp(const IpAddress& addr) {
+    publicIp = addr;
+}
+
+void Peer::setupServer(const IpAddress& addr) {
+    setPublicIp(addr);
     const char* type = "tcp";
-    // initialize server
-    server = new Server(host, port, type);
+
+    // Tear down existing server
+    if (server != nullptr) {
+        delete server;
+    }
+
+    // Initialize server
+    server = new Server(addr, type);
     server->setupServer();
 }
 
 Peer::~Peer() {
     delete client;
     delete server;
+    client = nullptr;
+    server = nullptr;
 }

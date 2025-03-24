@@ -6,12 +6,14 @@
 #include <string>
 
 class DiscoveryResponse : public Payload {
+    IpAddress callerAddr;
     AddressTable availablePeers;
 
   public:
     DiscoveryResponse();
-    DiscoveryResponse(const AddressTable& availablePeers);
+    DiscoveryResponse(const IpAddress& callerAddr, const AddressTable& availablePeers);
 
+    IpAddress getCallerPublicIpAddress() const;
     AddressTable getAvailablePeers() const;
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(

@@ -33,3 +33,4 @@ third_party/libzmq*
 CIFAR10/output
 CIFAR10/*.txt
 ml/proto
+ml/*.txt

@@ -11,6 +11,7 @@
 class TaskRequest : public Payload {
     unsigned int numWorkers;
     std::string leaderUuid;
+    unsigned int numEpochs;
     AddressTable assignedWorkers;
     // A globPattern for the names of the training
     // data files necessitates the creation of
@@ -24,13 +25,15 @@ class TaskRequest : public Payload {
     // Tagged "union" (to-do: c++17 supports variant class)
     enum TaskRequestType { NONE, GLOB_PATTERN, INDEX_FILENAME } taskRequestType;
     TaskRequest();
-    TaskRequest(const unsigned int numWorkers, const std::string& data,
+    TaskRequest(const unsigned int numWorkers, const std::string& data, const unsigned int numEpochs,
                 TaskRequestType type);
 
     void setLeaderUuid(const std::string& leaderUuid);
     void setAssignedWorkers(const AddressTable& assignedWorkers);
     void setGlobPattern(const std::string& pattern);
     void setTrainingDataIndexFilename(const std::string& filename);
+    void setNumEpochs(const unsigned int numEpochs);
+    // Write the index file(s) to SOURCE_DATA_DIR
     void writeToTrainingDataIndexFile(
         const std::vector<std::string>& trainingDataFiles) const;
 
@@ -39,9 +42,11 @@ class TaskRequest : public Payload {
     AddressTable getAssignedWorkers() const;
     std::string getGlobPattern() const;
     std::string getTrainingDataIndexFilename() const;
+    unsigned int getNumEpochs() const;
 
-    // Retrieves all data files referenced in this task request
-    std::vector<std::string> getTrainingDataFiles() const;
+    // Retrieves all data files referenced in this task request. Uses a dir to
+    // target a directory.
+    std::vector<std::string> getTrainingDataFiles(std::string dir) const;
     google::protobuf::Message* serializeToProto() const override;
     void deserializeFromProto(
         const google::protobuf::Message& protoMessage) override;

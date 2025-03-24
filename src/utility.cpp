@@ -5,12 +5,6 @@ using namespace std;
 IpAddress::IpAddress(const string& host, const unsigned short port)
     : host(host), port(port) {}
 
-IpAddress::IpAddress(const char* host, const char* port) {
-    this->host = host;
-    string portStr(port);
-    this->port = stoi(portStr);
-}
-
 // converts an IpAddress object to a utility::IpAddress proto object
 utility::IpAddress* serializeIpAddressToProto(const IpAddress& ipAddress) {
     utility::IpAddress* j = new utility::IpAddress();
@@ -27,6 +21,11 @@ IpAddress deserializeIpAddressFromProto(const utility::IpAddress& proto) {
     ip.host = proto.ip();
     ip.port = proto.port();
     return ip;
+}
+
+// overloaded output operator for IpAddress
+std::ostream& operator<<(std::ostream& os, const IpAddress& ip) {
+    return os << ip.host << ":" << ip.port;
 }
 
 // converts a AddressTable object to a utility::AddressTable proto object
@@ -80,44 +79,6 @@ string uuid::generate_uuid_v4() {
     };
     return ss.str();
 }
-
-string startNgrokForwarding(unsigned short port) {
-    const string command =
-        "python3 ./src/Networking/ngrok_ip.py " + to_string(port);
-
-    // start ngrok
-    string ngrok_restart =
-        "./src/Networking/ngrok_restart.sh " + to_string(port) + " &";
-    system(ngrok_restart.c_str());
-
-    // Open a pipe to capture the output
-    FILE* pipe = popen(command.c_str(), "r");
-    if (!pipe) {
-        cerr << "Error opening pipe." << endl;
-        return "";
-    }
-
-    // read
-    char buffer[256];
-    string result = "";
-    // while (fgets(buffer, 256, pipe) != nullptr) {
-    //     result += buffer;
-    // }
-
-    // // Close the pipe
-    // pclose(pipe);
-    // return result;
-    while (!feof(pipe)) {
-        if (fgets(buffer, 256, pipe) != nullptr)
-            result += buffer;
-    }
-
-    // Close the pipe
-    pclose(pipe);
-    return result;
-}
-
-void close_ngrok_forwarding() { system("pkill ngrok"); }
 
 string vectorToString(vector<int> vec) {
     stringstream ss;
@@ -208,22 +169,31 @@ int FTP_accept_conn(int sock) {
 }
 
 fs::path resolveDataFile(const std::string filename) {
-    std::string resolvedFilename = DATA_DIR + "/" + filename;
+    return resolveDataFileInDirectory(filename, SOURCE_DATA_DIR);
+}
+
+fs::path resolveDataFileInDirectory(const std::string filename,
+                                    const std::string dir) {
+
+    fs::path dirPath(dir);
+    if (!fs::exists(dirPath)) {
+        fs::create_directories(dirPath);
+    }
+    
+    std::string resolvedFilename = dir + "/" + filename;
     return fs::path(resolvedFilename);
 }
 
-bool isFileWithinDataDirectory(const std::string& filename) {
-    std::regex cloudmeshDataPattern(".*cloudmesh/" + std::string(DATA_DIR) +
-                                        ".*",
+bool isFileWithinDirectory(const std::string& filename, const std::string dir) {
+    std::regex cloudmeshDataPattern(".*cloudmesh/" + dir + ".*",
                                     std::regex_constants::icase);
 
     try {
-        fs::path requestedPath = resolveDataFile(filename);
+        fs::path requestedPath = resolveDataFileInDirectory(filename, dir);
         std::string canonicalPathStr =
             fs::canonical(fs::absolute(requestedPath)).string();
         return std::regex_search(canonicalPathStr, cloudmeshDataPattern);
     } catch (const std::exception& e) {
-        std::cerr << "Caught Error: " << e.what() << std::endl;
         return false; // Invalid path format or not within the data directory
     }
 }
@@ -251,6 +221,9 @@ int get_available_port() {
 
         close(sock);
     }
+
+    std::cerr << "Unable to find an available port after " << MAX_PORT_TRIES
+         << " tries" << std::endl;
     return -1;
 }
 

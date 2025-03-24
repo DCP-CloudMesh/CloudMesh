@@ -9,6 +9,10 @@
 #include "../RequestResponse/task_response.h"
 
 #include "peer.h"
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -18,7 +22,11 @@ class Provider : public Peer {
     bool isLocalBootstrap;
     bool isLeader;
     std::unique_ptr<TaskRequest> taskRequest;
-    std::unique_ptr<TaskResponse> taskResponse;
+    std::shared_ptr<TaskResponse> taskResponse;
+
+    std::string currentAggregatedModelStateDict;
+
+    std::thread* workloadThread;
 
     ZMQSender ml_zmq_sender;
     ZMQReceiver ml_zmq_receiver;
@@ -27,7 +35,7 @@ class Provider : public Peer {
     ZMQReceiver aggregator_zmq_receiver;
 
   public:
-    Provider(const char* port, std::string uuid);
+    Provider(unsigned short port, std::string uuid);
     ~Provider() noexcept;
 
     void registerWithBootstrap();
@@ -35,10 +43,15 @@ class Provider : public Peer {
     void leaderHandleTaskRequest(const IpAddress& requesterIpAddr);
     void followerHandleTaskRequest();
     void processData();
-    void processWorkload(); // worker function to manipulate the TaskRequest
-    std::string
+    void
+    initializeWorkloadToML(); // worker function to manipulate the TaskRequest
+    void processWorkload();   //
+
+    void
     ingestTrainingData(); // worker function to load training data into memory
-    TaskResponse aggregateResults(std::vector<std::string> followerData);
+
+    TaskResponse
+    aggregateResults(std::vector<std::shared_ptr<TaskResponse>> followerData);
 };
 
 #endif
