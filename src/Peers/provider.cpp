@@ -16,10 +16,19 @@ Provider::Provider(unsigned short port, string uuid)
     isBusy = false;
     isLocalBootstrap = false;
 
-    cout << "ML ZMQ: Sender: " << ml_zmq_sender.getAddress()
-         << ", Receiver: " << ml_zmq_receiver.getAddress() << endl;
-    cout << "Aggregator ZMQ: Sender: " << aggregator_zmq_sender.getAddress()
-         << ", Receiver: " << aggregator_zmq_receiver.getAddress() << endl;
+    cout << endl;
+
+    cout << "ML Command:" << endl;
+    cout << "python3 ml/main_simpleCNN.py --port_rec "
+         << ml_zmq_sender.getPort() << " --port_send "
+         << ml_zmq_receiver.getPort() << endl
+         << endl;
+
+    cout << "Aggregator Command:" << endl;
+    cout << "python3 ml/aggregator.py --port_rec "
+         << aggregator_zmq_sender.getPort() << " --port_send "
+         << aggregator_zmq_receiver.getPort() << " --num_peers" << endl
+         << endl;
 
     setupServer(IpAddress("127.0.0.1", port));
 }
@@ -176,11 +185,6 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
         // Aggregate model parameters and send to aggregator script
         aggregatedResults = aggregateResults(followerData);
 
-        // if final cycle, we send back to requester
-        if (aggregatedResults.getTrainingIsComplete()) {
-            break;
-        }
-
         // Send/Process aggregated results to follower peers
         cout << "Sending aggregated results to followers..." << endl;
         for (const auto& follower : taskRequest->getAssignedWorkers()) {
@@ -209,6 +213,11 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
             int code = client->sendMsg(msg.serialize(), -1);
             cout << "Leader sent data to follower with code " << code << endl;
         }
+
+        // // if final cycle, we send back to requester
+        // if (aggregatedResults.getTrainingIsComplete()) {
+        //     break;
+        // }
     }
 
     // Send results back to requester
@@ -274,42 +283,42 @@ void Provider::followerHandleTaskRequest() {
         int code = client->sendMsg(msg.serialize(), -1);
         cout << "Follower sent data to leader with code " << code << endl;
 
-        if (i != taskRequest->getNumEpochs() - 1) {
-            // TODO: change when we do multiple aggr. cycles in 1 epoch
-            // wait for leader to send model state dict param
-            while (!server->acceptConn())
-                ;
-            // receive aggregated TaskResponse object
-            string leaderMsgStr;
-            if (server->receiveFromConn(leaderMsgStr) == 1) {
-                cerr << "Failed to receive aggregated TaskResponse object from "
-                        "leader"
-                     << endl;
-                server->closeConn();
-                continue;
-            }
-
-            Message leaderMsg;
-            leaderMsg.deserialize(leaderMsgStr);
-            shared_ptr<Payload> leaderPayload = leaderMsg.getPayload();
-
-            if (leaderPayload->getType() != Payload::Type::TASK_RESPONSE) {
-                server->closeConn();
-                cerr << "Received payload is not of type TASK_RESPONSE" << endl;
-                continue;
-            }
-
-            shared_ptr<TaskResponse> taskResp =
-                static_pointer_cast<TaskResponse>(leaderPayload);
-            taskResponse = make_shared<TaskResponse>(std::move(*taskResp));
-            server->replyToConn("Received leader result.");
+        // if (i != taskRequest->getNumEpochs() - 1) {
+        // TODO: change when we do multiple aggr. cycles in 1 epoch
+        // wait for leader to send model state dict param
+        while (!server->acceptConn())
+            ;
+        // receive aggregated TaskResponse object
+        string leaderMsgStr;
+        if (server->receiveFromConn(leaderMsgStr) == 1) {
+            cerr << "Failed to receive aggregated TaskResponse object from "
+                    "leader"
+                 << endl;
             server->closeConn();
-
-            currentAggregatedModelStateDict = taskResponse->getTrainingData();
-
-            // forward model state dict param to ml
-            processWorkload();
+            continue;
         }
+
+        Message leaderMsg;
+        leaderMsg.deserialize(leaderMsgStr);
+        shared_ptr<Payload> leaderPayload = leaderMsg.getPayload();
+
+        if (leaderPayload->getType() != Payload::Type::TASK_RESPONSE) {
+            server->closeConn();
+            cerr << "Received payload is not of type TASK_RESPONSE" << endl;
+            continue;
+        }
+
+        shared_ptr<TaskResponse> taskResp =
+            static_pointer_cast<TaskResponse>(leaderPayload);
+        taskResponse = make_shared<TaskResponse>(std::move(*taskResp));
+        server->replyToConn("Received leader result.");
+        server->closeConn();
+
+        currentAggregatedModelStateDict = taskResponse->getTrainingData();
+
+        // forward model state dict param to ml
+        processWorkload();
+        // }
     }
 }
 

@@ -31,17 +31,16 @@ int main(int argc, char* argv[]) {
     try {
         // Define available program argument options
         po::options_description desc("Allowed options");
-        desc.add_options()
-            ("port,p", po::value<unsigned short>()->default_value(DEFAULT_PORT), "set P2P server port")
-            ("help,h", "produce help message")
-        ;
+        desc.add_options()(
+            "port,p", po::value<unsigned short>()->default_value(DEFAULT_PORT),
+            "set P2P server port")("help,h", "produce help message");
 
         // Parse command-line arguments
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
 
-        //Handle options
+        // Handle options
         if (vm.count("help")) {
             cout << desc << endl;
             return 0;
@@ -60,24 +59,24 @@ int main(int argc, char* argv[]) {
 #elif defined(REQUESTER)
     // Define available program argument options
     po::options_description desc("Allowed options");
-    desc.add_options()
-        ("port,p", po::value<unsigned short>()->default_value(DEFAULT_PORT),
-            "set P2P server port")
-        ("mode,m", po::value<string>(),
-            "set mode to run requester: 'c' for compute task or 'r' for receive results")
-        ("workers,w", po::value<unsigned int>()->default_value(DEFAULT_WORKERS),
-            "set number of workers to assign training task")
-        ("epochs,e", po::value<unsigned int>()->default_value(DEFAULT_EPOCHS),
-            "set number of epochs to run training task")
-        ("help,h", "produce help message")
-    ;
+    desc.add_options()("port,p",
+                       po::value<unsigned short>()->default_value(DEFAULT_PORT),
+                       "set P2P server port")(
+        "mode,m", po::value<string>()->default_value("c"),
+        "set mode to run requester: 'c' for compute task or 'r' for receive "
+        "results")("workers,w",
+                   po::value<unsigned int>()->default_value(DEFAULT_WORKERS),
+                   "set number of workers to assign training task")(
+        "epochs,e", po::value<unsigned int>()->default_value(DEFAULT_EPOCHS),
+        "set number of epochs to run training task")("help,h",
+                                                     "produce help message");
 
     // Parse command-line arguments
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    //Handle options
+    // Handle options
     if (vm.count("help")) {
         cout << desc << endl;
         return 0;

@@ -14,6 +14,7 @@ class ZMQSender {
   public:
     ZMQSender();
     void send(const std::string& message);
+    unsigned int getPort();
     std::string getAddress();
 };
 

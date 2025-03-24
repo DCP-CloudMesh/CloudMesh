@@ -4,11 +4,11 @@
 #include "../../include/RequestResponse/discovery_request.h"
 #include "../../include/RequestResponse/discovery_response.h"
 #include "../../include/RequestResponse/message.h"
+#include "../../include/RequestResponse/model_state_dict_params.h"
 #include "../../include/RequestResponse/registration.h"
 #include "../../include/RequestResponse/registration_response.h"
 #include "../../include/RequestResponse/task_request.h"
 #include "../../include/RequestResponse/task_response.h"
-#include "../../include/RequestResponse/model_state_dict_params.h"
 #include "../../include/utility.h"
 
 using namespace std;
@@ -97,7 +97,8 @@ string Message::serialize() const {
         break;
     }
     case Payload::Type::REGISTRATION_RESPONSE: {
-        messageProto.set_payloadtype(payload::PayloadType::REGISTRATION_RESPONSE);
+        messageProto.set_payloadtype(
+            payload::PayloadType::REGISTRATION_RESPONSE);
         shared_ptr<RegistrationResponse> registrationResponse =
             getPayloadAs<RegistrationResponse>();
         payload::RegistrationResponse* rrProto =
@@ -141,10 +142,12 @@ string Message::serialize() const {
         break;
     }
     case Payload::Type::MODEL_STATE_DICT_PARAMS: {
-        messageProto.set_payloadtype(payload::PayloadType::MODEL_STATE_DICT_PARAMS);
-        shared_ptr<ModelStateDictParams> modelParams = getPayloadAs<ModelStateDictParams>();
-        auto* modelParamsProto =
-            static_cast<payload::ModelStateDictParams*>(modelParams->serializeToProto());
+        messageProto.set_payloadtype(
+            payload::PayloadType::MODEL_STATE_DICT_PARAMS);
+        shared_ptr<ModelStateDictParams> modelParams =
+            getPayloadAs<ModelStateDictParams>();
+        auto* modelParamsProto = static_cast<payload::ModelStateDictParams*>(
+            modelParams->serializeToProto());
         messageProto.set_allocated_modelstatedictparams(modelParamsProto);
         break;
     }
@@ -201,7 +204,7 @@ void Message::deserialize(const string& serializedData) {
         payload->deserializeFromProto(registration);
     } else if (messageProto.payloadtype() ==
                payload::PayloadType::REGISTRATION_RESPONSE) {
-        const payload::RegistrationResponse&  registrationResponse =
+        const payload::RegistrationResponse& registrationResponse =
             messageProto.registrationresponse();
         payload->deserializeFromProto(registrationResponse);
     } else if (messageProto.payloadtype() ==
@@ -210,7 +213,8 @@ void Message::deserialize(const string& serializedData) {
         payload->deserializeFromProto(ack);
     } else if (messageProto.payloadtype() ==
                payload::PayloadType::MODEL_STATE_DICT_PARAMS) {
-        const payload::ModelStateDictParams& modelParams = messageProto.modelstatedictparams();
+        const payload::ModelStateDictParams& modelParams =
+            messageProto.modelstatedictparams();
         payload->deserializeFromProto(modelParams);
     } else {
         cerr << "Unknown or unsupported payload type for deserialization"

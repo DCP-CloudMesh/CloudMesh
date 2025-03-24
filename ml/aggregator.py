@@ -7,6 +7,7 @@ from torchvision import datasets, transforms
 import time
 import pickle
 import zmq
+import argparse
 
 from networks import SimpleCNN
 from dataloader import CIFAR10Dataset, get_data_loaders
@@ -37,9 +38,17 @@ def nn_aggregator(state_dicts):
 
 def main():
     # Set up the context and responder socket
-    port_rec = int(input("Enter the ZMQ sender port number: "))
-    port_send = int(input("Enter the ZMQ reciever port number: "))
-    num_peers = int(input("Enter the number of peers: "))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port_rec', type=int, required=True,
+                        help='Aggregator sender port number')
+    parser.add_argument('--port_send', type=int,
+                        required=True, help='Aggregator receiver port number')
+    parser.add_argument('--num_peers', type=int, required=True,
+                        help='Number of peers to wait for')
+    args = parser.parse_args()
+    port_rec = int(args.port_rec)
+    port_send = int(args.port_send)
+    num_peers = int(args.num_peers)
 
     context = zmq.Context()
     receiver = network.ZMQReciever(context, port_rec)
@@ -81,6 +90,7 @@ def main():
         sender.send(tr.SerializeToString())
 
     # send final response
+    print("Sending final response...")
     pickled_weights = pickle.dumps(final_state_dict)
     task_response = payload_pb2.TaskResponse()
     task_response.modelStateDict = pickled_weights

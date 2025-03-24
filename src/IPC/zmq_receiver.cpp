@@ -7,6 +7,7 @@ ZMQReceiver::ZMQReceiver()
     socket.bind(address);
 }
 
+unsigned int ZMQReceiver::getPort() { return port; }
 std::string ZMQReceiver::getAddress() { return address; }
 
 std::string ZMQReceiver::receive() {
