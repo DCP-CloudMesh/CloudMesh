@@ -89,9 +89,9 @@ int Client::sendMsg(const string& data, int num_retries) {
 
     cout << "Client successfully sent message" << endl;
 
-    // Set socket timeout to 3 seconds
+    // Set socket timeout to 10 seconds
     struct timeval tv;
-    tv.tv_sec = 3;
+    tv.tv_sec = 10;
     tv.tv_usec = 0;
     setsockopt(CONN, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
