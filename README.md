@@ -87,23 +87,40 @@ To execute, run the following commands:
 ```
 ./bazel-bin/bootstrap
 ```
-(8080 is reserved for bootstrap port so peers know where to connect)
+(Uses port 8080)
 
 ### Provider
 ```
-./bazel-bin/provider [8080]
-``` 
-(8080 is the default port, optional parameter)
+./bazel-bin/provider -p <port number>
+```
+Example:
+```
+./bazel-bin/provider -p 8081
+```
+Program arguments can be viewed with
+```
+./bazel-bin/provider -h
+```
 
 ### Requester
 
 ```
-./bazel-bin/requester [8080 [r | c]] 
+./bazel-bin/requester -w <# workers> -e <# epochs> -p <port number> -m <mode ('c' or 'r')>
 ```
-`8080` is the default port, optional parameter\
-`r` is an optional parameter to request to receive the result of the computation (use same port as original request execution)
-`c` is an optional parameter to request to provide the computation
+Request to compute task example
+```
+./bazel-bin/requester -w 3 -e 10 -p 8082 -m c
+```
+Request to receive results example
+```
+./bazel-bin/requester -p 8082 -m r
+```
+The program execution for receiving results must use the same port as the execution of the compute request.
 
+Program arguments can be viewed with
+```
+./bazel-bin/requester -h
+```
 
 ### Resources
 
