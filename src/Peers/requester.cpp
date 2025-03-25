@@ -138,6 +138,11 @@ void Requester::sendTaskRequest() {
              << "Sending out discovery request..." << endl;
         sendDiscoveryRequest(numRequestedWorkers);
         waitForDiscoveryResponse();
+        if (providerPeers.size() < numRequestedWorkers) {
+            cout << numRequestedWorkers - providerPeers.size()
+                 << " Providers still missing. Trying again in 5s...\n" << endl;
+            sleep(5);
+        }
     }
 
     // Set task leader and followers
