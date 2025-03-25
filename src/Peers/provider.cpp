@@ -137,7 +137,7 @@ void Provider::listen() {
 void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
     TaskResponse aggregatedResults = TaskResponse();
 
-    for (unsigned int i = 0; i < taskRequest->getNumEpochs(); i++) {
+    while (true) {
         vector<shared_ptr<TaskResponse>> followerData{};
         while (followerData.size() <
                taskRequest->getAssignedWorkers().size() -
@@ -185,6 +185,11 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
         // Aggregate model parameters and send to aggregator script
         aggregatedResults = aggregateResults(followerData);
 
+        // Check that aggregator is done
+        if (aggregatedResults.getTrainingIsComplete()) {
+            break;
+        }
+
         // Send/Process aggregated results to follower peers
         cout << "Sending aggregated results to followers..." << endl;
         for (const auto& follower : taskRequest->getAssignedWorkers()) {
@@ -213,11 +218,6 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
             int code = client->sendMsg(msg.serialize(), -1);
             cout << "Leader sent data to follower with code " << code << endl;
         }
-
-        // // if final cycle, we send back to requester
-        // if (aggregatedResults.getTrainingIsComplete()) {
-        //     break;
-        // }
     }
 
     // Send results back to requester
@@ -267,7 +267,7 @@ void Provider::followerHandleTaskRequest() {
     delete workloadThread;
     workloadThread = nullptr;
 
-    for (unsigned int i = 0; i < taskRequest->getNumEpochs(); i++) {
+    while (true) {
         // run one aggregation cycle of training
         cout << "Waiting for connection back to leader" << endl;
         IpAddress leaderIp =
@@ -278,10 +278,16 @@ void Provider::followerHandleTaskRequest() {
         }
 
         // send results back to leader
-        shared_ptr<TaskResponse> payload = std::move(taskResponse);
+        shared_ptr<TaskResponse> payload = taskResponse;
         Message msg(uuid, publicIp, payload);
         int code = client->sendMsg(msg.serialize(), -1);
         cout << "Follower sent data to leader with code " << code << endl;
+
+        // Check if done training
+        if (taskResponse->getTrainingIsComplete()) {
+            cout << "No more training for follower" << endl;
+            break;
+        }
 
         // if (i != taskRequest->getNumEpochs() - 1) {
         // TODO: change when we do multiple aggr. cycles in 1 epoch

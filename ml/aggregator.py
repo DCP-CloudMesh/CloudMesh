@@ -54,50 +54,49 @@ def main():
     receiver = network.ZMQReciever(context, port_rec)
     sender = network.ZMQSender(context, port_send)
 
-    numCompletePeers = 0
-    # completeStateDicts = []
-    final_state_dict = None
-
-    # recieve the models from fake_peer.py
     while True:
-        print("Waiting for models...")
-        # state_dicts = completeStateDicts.copy()
-        state_dicts = []
-        for _ in range(num_peers - numCompletePeers):
-            payload = receiver.receive()
-            agg_inp = payload_pb2.ModelStateDictParams()
-            agg_inp.ParseFromString(payload)
-            agg_inp_model = pickle.loads(agg_inp.modelStateDict)
-            if agg_inp.trainingIsComplete:
-                numCompletePeers += 1
-                # completeStateDicts.append(agg_inp_model)
-            state_dicts.append(agg_inp_model)
-            time.sleep(5)
+        numCompletePeers = 0
+        # completeStateDicts = []
+        final_state_dict = None
 
-        # average the models
-        print("Averaging models...")
-        avg_state_dict = nn_aggregator(state_dicts)
+        # recieve the models from fake_peer.py
+        while True:
+            print("Waiting for models...")
+            # state_dicts = completeStateDicts.copy()
+            state_dicts = []
+            for _ in range(num_peers - numCompletePeers):
+                payload = receiver.receive()
+                agg_inp = payload_pb2.ModelStateDictParams()
+                agg_inp.ParseFromString(payload)
+                agg_inp_model = pickle.loads(agg_inp.modelStateDict)
+                if agg_inp.trainingIsComplete:
+                    numCompletePeers += 1
+                    # completeStateDicts.append(agg_inp_model)
+                state_dicts.append(agg_inp_model)
+                time.sleep(5)
 
-        if numCompletePeers > 0:
-            final_state_dict = avg_state_dict
-            break
+            # average the models
+            print("Averaging models...")
+            avg_state_dict = nn_aggregator(state_dicts)
 
-        # send the averaged model back to fake_peer.py
-        print("Sending averaged model...")
-        tr = payload_pb2.TaskResponse()
-        tr.modelStateDict = pickle.dumps(avg_state_dict)
-        tr.trainingIsComplete = False
-        sender.send(tr.SerializeToString())
+            if numCompletePeers > 0:
+                final_state_dict = avg_state_dict
+                break
 
-    # send final response
-    print("Sending final response...")
-    pickled_weights = pickle.dumps(final_state_dict)
-    task_response = payload_pb2.TaskResponse()
-    task_response.modelStateDict = pickled_weights
-    task_response.trainingIsComplete = True
-    sender.send(task_response.SerializeToString())
+            # send the averaged model back to fake_peer.py
+            print("Sending averaged model...")
+            tr = payload_pb2.TaskResponse()
+            tr.modelStateDict = pickle.dumps(avg_state_dict)
+            tr.trainingIsComplete = False
+            sender.send(tr.SerializeToString())
 
-    return
+        # send final response
+        print("Sending final response...")
+        pickled_weights = pickle.dumps(final_state_dict)
+        task_response = payload_pb2.TaskResponse()
+        task_response.modelStateDict = pickled_weights
+        task_response.trainingIsComplete = True
+        sender.send(task_response.SerializeToString())
 
 
 if __name__ == "__main__":

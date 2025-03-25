@@ -101,6 +101,27 @@ def main():
             pickled_weights = pickle.dumps(model.state_dict())
             task_response = payload_pb2.TaskResponse()
             task_response.modelStateDict = pickled_weights
+
+            # Check if on the last epoch
+            if epoch == epochs - 1:
+                task_response.trainingIsComplete = True
+
+                # Test the model
+                print("testing")
+                test(model, device, test_loader, criterion, data_path)
+
+                # Save the model checkpoint
+                # torch.save(model.state_dict(), f"{data_path}output/model.pth")
+                # print("Finished Training. Model saved as model.pth.")
+
+                end_time = time.time()
+                print("Total Time: ", end_time - start_time)
+                print("Start Time: ", start_time)
+                print("End Time: ", end_time)
+
+                sender.send(task_response.SerializeToString())
+                break
+
             task_response.trainingIsComplete = False
             sender.send(task_response.SerializeToString())
 
@@ -116,24 +137,12 @@ def main():
             # update current model with the averaged state dict
             model.load_state_dict(averaged_state_dict)
 
-        # Test the model
-        test(model, device, test_loader, criterion, data_path)
-
-        # Save the model checkpoint
-        # torch.save(model.state_dict(), f"{data_path}output/model.pth")
-        # print("Finished Training. Model saved as model.pth.")
-
-        end_time = time.time()
-        print("Total Time: ", end_time - start_time)
-        print("Start Time: ", start_time)
-        print("End Time: ", end_time)
-
         # send final response
-        pickled_weights = pickle.dumps(model.state_dict())
-        task_response = payload_pb2.TaskResponse()
-        task_response.modelStateDict = pickled_weights
-        task_response.trainingIsComplete = True
-        sender.send(task_response.SerializeToString())
+        # pickled_weights = pickle.dumps(model.state_dict())
+        # task_response = payload_pb2.TaskResponse()
+        # task_response.modelStateDict = pickled_weights
+        # task_response.trainingIsComplete = True
+        # sender.send(task_response.SerializeToString())
 
 
 if __name__ == "__main__":
