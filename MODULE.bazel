@@ -13,16 +13,17 @@ local_repository(
     path = "third_party",
 )
 
-bazel_dep(name = "protobuf", version = "29.0-rc1")
+bazel_dep(name = "protobuf", version = "29.0")
 bazel_dep(name = "googletest", version = "1.15.2")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_proto", version = "7.0.2")
+bazel_dep(name = "rules_cc", version = "0.0.16")
 
 bazel_dep(name = "rules_boost", repo_name = "com_github_nelhage_rules_boost")
 archive_override(
     module_name = "rules_boost",
-    urls = "https://github.com/nelhage/rules_boost/archive/refs/heads/master.tar.gz",
+    urls = ["https://github.com/nelhage/rules_boost/archive/refs/heads/master.tar.gz"],
     strip_prefix = "rules_boost-master",
-    # It is recommended to edit the above URL and the below sha256 to point to a specific version of this repository.
-    # integrity = "sha256-...",
 )
 non_module_boost_repositories = use_extension("@com_github_nelhage_rules_boost//:boost/repositories.bzl", "non_module_dependencies")
 use_repo(
