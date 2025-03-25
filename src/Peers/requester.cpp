@@ -75,6 +75,7 @@ void Requester::setTaskRequest(TaskRequest request_) {
 }
 
 void Requester::divideTask() {
+    cout << "\n=== PARTITIONING TRAINING DATASET AMONG PROVIDERS ===\n" << endl;
     TaskRequest queuedTask = taskRequests.front();
 
     // obtain list of training files
@@ -147,8 +148,11 @@ void Requester::sendTaskRequest() {
         }
         workers[provider.first] = provider.second;
     }
+    string leaderUuid = workers.begin()->first;
     taskRequests[0].setAssignedWorkers(workers);
-    taskRequests[0].setLeaderUuid(workers.begin()->first);
+    taskRequests[0].setLeaderUuid(leaderUuid);
+    cout << "Assigned provider at " << workers[leaderUuid] << " as leader"
+         << endl;
 
     // divides the task into subtasks
     divideTask();
@@ -163,6 +167,7 @@ void Requester::sendTaskRequest() {
 
         // set up the client
         IpAddress workerIp = worker.second;
+        cout << "Sending task request to provider at " << workerIp << endl;
         client->setupConn(workerIp, "tcp");
 
         // send the request
@@ -174,6 +179,8 @@ void Requester::sendTaskRequest() {
 void Requester::checkStatus() {}
 
 TaskResponse Requester::getResults() {
+    cout << "\n=== COLLECTING TRAINING TASK RESULTS ===\n" << endl;
+
     TaskResponse taskResult;
     // busy wait until connection is established
     cout << "Waiting for leader peer to connect" << endl;

@@ -61,7 +61,7 @@ bool Server::acceptConn(IpAddress& clientAddr) {
     clientAddr.host = string(addrBuffer);
     clientAddr.port = htons(addr.sin_port);
 
-    cout << "Client connected from " << clientAddr << endl;
+    cout << "Accepted connection from " << clientAddr << endl;
     return true;
 }
 

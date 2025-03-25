@@ -42,9 +42,9 @@ def val(model, device, val_loader, criterion, epoch, output_path, num_classes=10
 
     # Print results
     print(
-        f"\nValidation set: Average loss: {val_loss:.4f}, Accuracy: {correct}/{len(val_loader.dataset)} ({100. * accuracy:.0f}%)"
+        f"Validation set: Average loss: {val_loss:.4f}, Accuracy: {correct}/{len(val_loader.dataset)} ({100. * accuracy:.0f}%)"
     )
-    print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}\n")
+    print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}")
 
     # Save numeric metrics
     metrics = {

@@ -21,11 +21,14 @@ int main(int argc, char* argv[]) {
 
     string uuid = uuid::generate_uuid_v4();
 
+    cout << "\n=== INITIALIZING NODE ===\n" << endl;
 #if defined(BOOTSTRAP)
     unsigned int bootstrapPort = BootstrapNode::getServerIpAddr().port;
     cout << "Running as bootstrap node on port " << bootstrapPort << "."
          << endl;
     BootstrapNode b = BootstrapNode(uuid);
+
+    cout << "\n=== SERVING NEW PEERS ===" << endl;
     b.listen();
 #elif defined(PROVIDER)
     try {
@@ -54,6 +57,8 @@ int main(int argc, char* argv[]) {
 
     cout << "Running as provider on port " << port << "." << endl;
     Provider p = Provider(port, uuid);
+
+    cout << "\n=== JOINING P2P NETWORK ===\n" << endl;
     p.registerWithBootstrap();
     p.listen();
 #elif defined(REQUESTER)
@@ -91,12 +96,14 @@ int main(int argc, char* argv[]) {
     if (mode == "c") {
         unsigned int numRequestedWorkers = vm["workers"].as<unsigned int>();
         unsigned int numEpochs = vm["epochs"].as<unsigned int>();
+        cout << "\n=== INITIALIZING TRAINING TASK ===\n" << endl;
         cout << "Creating training task for " << numRequestedWorkers
              << " workers and " << numEpochs << " epochs" << endl;
         TaskRequest request = TaskRequest(numRequestedWorkers, ".*\\.jpg$",
                                           numEpochs, TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
+        cout << "\n=== SENDING TRAINING REQUEST TO PROVIDER NETWORK ===\n" << endl;
         r.sendTaskRequest();
         cout << "Sent task request." << endl;
     } else if (mode == "r") {

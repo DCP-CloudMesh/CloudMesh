@@ -60,6 +60,7 @@ def main():
         final_state_dict = None
 
         # recieve the models from fake_peer.py
+        print("\n=== ACCEPTING NEW MODELS TO START AGGREGATION ===\n")
         while True:
             print("Waiting for models...")
             # state_dicts = completeStateDicts.copy()
@@ -84,7 +85,7 @@ def main():
                 break
 
             # send the averaged model back to fake_peer.py
-            print("Sending averaged model...")
+            print("Sending averaged model...\n")
             tr = payload_pb2.TaskResponse()
             tr.modelStateDict = pickle.dumps(avg_state_dict)
             tr.trainingIsComplete = False

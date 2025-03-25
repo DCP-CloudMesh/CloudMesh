@@ -13,6 +13,7 @@ from dataloader import CIFAR10Dataset, get_data_loaders
 from utils import train, val, test, network
 from proto import payload_pb2, utility_pb2
 import argparse
+import warnings
 
 
 def main():
@@ -40,6 +41,7 @@ def main():
 
     while True:
         # recieve a payload with the data_file_names
+        print('\n=== ACCEPTING TRAINING TASK REQUEST ===\n')
         payload = receiver.receive()
         training_payload = payload_pb2.TrainingData()
         training_payload.ParseFromString(payload)
@@ -91,10 +93,10 @@ def main():
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
         # Train the model
+        print('\n=== TRAIN & VALIDATE MODEL ===\n')
         for epoch in range(epochs):
-            print("training")
             train(model, device, train_loader, optimizer, criterion, epoch)
-            print("validating")
+            print("\nValidating")
             val(model, device, val_loader, criterion, epoch, data_path)
 
             # non compressed, non protobuf sending weights
@@ -107,7 +109,7 @@ def main():
                 task_response.trainingIsComplete = True
 
                 # Test the model
-                print("testing")
+                print('\n=== TEST MODEL ===\n')
                 test(model, device, test_loader, criterion, data_path)
 
                 # Save the model checkpoint
@@ -122,17 +124,18 @@ def main():
                 sender.send(task_response.SerializeToString())
                 break
 
+            print("Publishing model state dict")
             task_response.trainingIsComplete = False
             sender.send(task_response.SerializeToString())
 
             # receive the updated message
             # TODO: fix this if we ignore the very last message
-            print("waiting for response")
+            print("Waiting for averaged model state dict")
             payload = receiver.receive()
             agg_inp = payload_pb2.ModelStateDictParams()
             agg_inp.ParseFromString(payload)
             averaged_state_dict = pickle.loads(agg_inp.modelStateDict)
-            print("received averaged state dict")
+            print("Received averaged model state dict\n")
 
             # update current model with the averaged state dict
             model.load_state_dict(averaged_state_dict)
@@ -146,4 +149,5 @@ def main():
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore")
     main()

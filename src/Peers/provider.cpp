@@ -74,7 +74,7 @@ void Provider::registerWithBootstrap() {
 
 void Provider::listen() {
     while (true) {
-        cout << "Waiting for requester to connect..." << endl;
+        cout << "\n=== WAITING FOR TRAINING TASK ===\n" << endl;
         if (!server->acceptConn()) {
             continue;
         }
@@ -97,6 +97,7 @@ void Provider::listen() {
         string requesterUuid = requesterMsg.getSenderUuid();
         IpAddress requesterIpAddr = requesterMsg.getSenderIpAddr();
         shared_ptr<Payload> requesterPayload = requesterMsg.getPayload();
+        cout << "Received training task from requester at " << requesterIpAddr << endl;
 
         // Parse and assign member field with task request received
         shared_ptr<TaskRequest> taskReq =
@@ -113,6 +114,8 @@ void Provider::listen() {
             continue;
         }
 
+        cout << "\n=== FTP TRAINING DATA TRANSFER ===\n" << endl;
+
         // Download and parse training data index file from requester
         cout << "FTP: requesting index: "
              << taskRequest->getTrainingDataIndexFilename() << endl;
@@ -122,6 +125,12 @@ void Provider::listen() {
         // server->getFileFTP(taskRequest->getTrainingDataIndexFilename());
         ingestTrainingData();
         server->closeConn();
+
+        if (taskRequest->getLeaderUuid() == uuid) {
+            cout << "\n=== LEADER PROVIDER TRAINING WORKFLOW ===\n" << endl;
+        } else {
+            cout << "\n=== FOLLOWER PROVIDER TRAINING WORKFLOW ===\n" << endl;
+        }
 
         // initialize ML.py with metadata
         workloadThread = new thread(&Provider::initializeWorkloadToML, this);
@@ -147,7 +156,7 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
                      // required. So we can't wait for all followers to convene.
         ) {
 
-            cout << "\nWaiting for follower peer to connect..." << endl;
+            cout << "Waiting for follower peer to connect..." << endl;
             while (!server->acceptConn())
                 ;
 
@@ -216,12 +225,14 @@ void Provider::leaderHandleTaskRequest(const IpAddress& requesterIpAddr) {
                 make_shared<TaskResponse>(aggregatedResults);
             Message msg(uuid, publicIp, payload);
             int code = client->sendMsg(msg.serialize(), -1);
-            cout << "Leader sent data to follower with code " << code << endl;
+            cout << "Leader sent aggregated data to follower at " << followerIp
+                 << " with code " << code << endl;
         }
     }
 
     // Send results back to requester
     // TODO: requester IP address could change
+    cout << "\nTraining task completed. Sending results back to requester." << endl;
     shared_ptr<TaskResponse> aggregatePayload =
         make_shared<TaskResponse>(aggregatedResults);
     Message aggregateResultMsg(uuid, publicIp, aggregatePayload);
@@ -269,7 +280,7 @@ void Provider::followerHandleTaskRequest() {
 
     while (true) {
         // run one aggregation cycle of training
-        cout << "Waiting for connection back to leader" << endl;
+        cout << "\nWaiting for connection back to leader" << endl;
         IpAddress leaderIp =
             taskRequest->getAssignedWorkers()[taskRequest->getLeaderUuid()];
         // busy wait until connection is established with the leader
@@ -401,7 +412,7 @@ Provider::aggregateResults(vector<shared_ptr<TaskResponse>> followerData) {
     // send each follower's data to the aggregator
     cout << "Sending data to aggregator..." << endl;
     for (unsigned int i = 0; i < followerData.size(); i++) {
-        cout << "Aggregator for loop: " << i << endl;
+        cout << "Sending provider peer " << i << " data" << endl;
         payload::ModelStateDictParams* proto =
             new payload::ModelStateDictParams();
         proto->set_modelstatedict(followerData[i]->getTrainingData());
@@ -413,7 +424,7 @@ Provider::aggregateResults(vector<shared_ptr<TaskResponse>> followerData) {
     }
 
     // receive aggregated data from the aggregator
-    cout << "Waiting for aggregated data..." << endl;
+    cout << "\nWaiting for aggregated data..." << endl;
     auto rcvdData = aggregator_zmq_receiver.receive();
     cout << "Received aggregated data" << endl;
 
