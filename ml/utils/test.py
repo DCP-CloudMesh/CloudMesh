@@ -41,7 +41,7 @@ def test(model, device, test_loader, criterion, output_path, num_classes=10):
 
     # Print results
     print(
-        f"\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * accuracy:.0f}%)"
+        f"Test set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * accuracy:.0f}%)"
     )
     print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1: {f1:.4f}\n")
 

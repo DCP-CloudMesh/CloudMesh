@@ -6,6 +6,8 @@ ZMQSender::ZMQSender() : context(1), socket(context, zmq::socket_type::req) {
     socket.connect(address);
 }
 
+unsigned int ZMQSender::getPort() { return port; }
+
 std::string ZMQSender::getAddress() { return address; }
 
 void ZMQSender::send(const std::string& message) {

@@ -21,27 +21,29 @@ int main(int argc, char* argv[]) {
 
     string uuid = uuid::generate_uuid_v4();
 
+    cout << "\n=== INITIALIZING NODE ===\n" << endl;
 #if defined(BOOTSTRAP)
     unsigned int bootstrapPort = BootstrapNode::getServerIpAddr().port;
     cout << "Running as bootstrap node on port " << bootstrapPort << "."
          << endl;
     BootstrapNode b = BootstrapNode(uuid);
+
+    cout << "\n=== SERVING NEW PEERS ===" << endl;
     b.listen();
 #elif defined(PROVIDER)
     try {
         // Define available program argument options
         po::options_description desc("Allowed options");
-        desc.add_options()
-            ("port,p", po::value<unsigned short>()->default_value(DEFAULT_PORT), "set P2P server port")
-            ("help,h", "produce help message")
-        ;
+        desc.add_options()(
+            "port,p", po::value<unsigned short>()->default_value(DEFAULT_PORT),
+            "set P2P server port")("help,h", "produce help message");
 
         // Parse command-line arguments
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
 
-        //Handle options
+        // Handle options
         if (vm.count("help")) {
             cout << desc << endl;
             return 0;
@@ -55,29 +57,31 @@ int main(int argc, char* argv[]) {
 
     cout << "Running as provider on port " << port << "." << endl;
     Provider p = Provider(port, uuid);
+
+    cout << "\n=== JOINING P2P NETWORK ===\n" << endl;
     p.registerWithBootstrap();
     p.listen();
 #elif defined(REQUESTER)
     // Define available program argument options
     po::options_description desc("Allowed options");
-    desc.add_options()
-        ("port,p", po::value<unsigned short>()->default_value(DEFAULT_PORT),
-            "set P2P server port")
-        ("mode,m", po::value<string>(),
-            "set mode to run requester: 'c' for compute task or 'r' for receive results")
-        ("workers,w", po::value<unsigned int>()->default_value(DEFAULT_WORKERS),
-            "set number of workers to assign training task")
-        ("epochs,e", po::value<unsigned int>()->default_value(DEFAULT_EPOCHS),
-            "set number of epochs to run training task")
-        ("help,h", "produce help message")
-    ;
+    desc.add_options()("port,p",
+                       po::value<unsigned short>()->default_value(DEFAULT_PORT),
+                       "set P2P server port")(
+        "mode,m", po::value<string>()->default_value("c"),
+        "set mode to run requester: 'c' for compute task or 'r' for receive "
+        "results")("workers,w",
+                   po::value<unsigned int>()->default_value(DEFAULT_WORKERS),
+                   "set number of workers to assign training task")(
+        "epochs,e", po::value<unsigned int>()->default_value(DEFAULT_EPOCHS),
+        "set number of epochs to run training task")("help,h",
+                                                     "produce help message");
 
     // Parse command-line arguments
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    //Handle options
+    // Handle options
     if (vm.count("help")) {
         cout << desc << endl;
         return 0;
@@ -92,12 +96,14 @@ int main(int argc, char* argv[]) {
     if (mode == "c") {
         unsigned int numRequestedWorkers = vm["workers"].as<unsigned int>();
         unsigned int numEpochs = vm["epochs"].as<unsigned int>();
+        cout << "\n=== INITIALIZING TRAINING TASK ===\n" << endl;
         cout << "Creating training task for " << numRequestedWorkers
              << " workers and " << numEpochs << " epochs" << endl;
         TaskRequest request = TaskRequest(numRequestedWorkers, ".*\\.jpg$",
                                           numEpochs, TaskRequest::GLOB_PATTERN);
         r.setTaskRequest(request);
         // sends the task request to the leader and provider peers
+        cout << "\n=== SENDING TRAINING REQUEST TO PROVIDER NETWORK ===\n" << endl;
         r.sendTaskRequest();
         cout << "Sent task request." << endl;
     } else if (mode == "r") {

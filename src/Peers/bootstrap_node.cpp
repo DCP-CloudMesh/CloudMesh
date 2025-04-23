@@ -52,7 +52,7 @@ AddressTable BootstrapNode::discoverPeers(const string& peerUuid,
 
 void BootstrapNode::listen() {
     while (true) {
-        cout << "Waiting for peer to connect..." << endl;
+        cout << "\nWaiting for peer to connect..." << endl;
         IpAddress senderClientIpAddr;
 
         if (!server->acceptConn(senderClientIpAddr)) {
@@ -81,7 +81,7 @@ void BootstrapNode::listen() {
         switch (payload->getType()) {
         case Payload::Type::REGISTRATION: {
             server->replyToConn(replyPrefix + "received registration request");
-            cout << "received registration request from " << senderServerIpAddr.host << endl;
+            cout << "Received registration request from " << senderServerIpAddr.host << endl;
             registerPeer(senderUuid, senderServerIpAddr);
             server->replyToConn("\nRegistration successful");
             // Create response
@@ -94,6 +94,7 @@ void BootstrapNode::listen() {
         }
         case Payload::Type::DISCOVERY_REQUEST: {
             server->replyToConn(replyPrefix + "received discovery request");
+            cout << "Received discovery request from " << senderServerIpAddr.host << endl;
             shared_ptr<DiscoveryRequest> dr =
                 static_pointer_cast<DiscoveryRequest>(payload);
             unsigned int numPeersRequested = dr->getPeersRequested();

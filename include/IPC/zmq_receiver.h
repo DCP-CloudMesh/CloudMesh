@@ -14,6 +14,7 @@ class ZMQReceiver {
   public:
     ZMQReceiver();
     std::string receive();
+    unsigned int getPort();
     std::string getAddress();
 };
 
