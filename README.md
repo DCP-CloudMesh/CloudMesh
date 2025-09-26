@@ -1,5 +1,9 @@
 # CloudMesh
 
+<p align="center">
+  <img src="./CloudMeshPoster.png" alt="Size Limit CLI" width="600">
+</p>
+
 ## Dependencies
 Follow this to install bazel - https://bazel.build/install
 
